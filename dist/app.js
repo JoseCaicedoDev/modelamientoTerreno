@@ -25,7 +25,6 @@
     [0.86, '#936d5b'],
     [1.00, '#f2efe6']
   ];
-  const shadeScale = [[0, '#071014'], [0.28, '#33464a'], [0.58, '#83918f'], [1, '#f3f1e8']];
   const camera = { eye: { x: 1.34, y: -1.5, z: 0.78 }, center: { x: 0, y: 0, z: -0.08 } };
   let colorMode = 'elevation';
   let contoursVisible = true;
@@ -174,22 +173,21 @@
 
   function setColorMode(mode) {
     colorMode = mode;
-    const elevation = mode === 'elevation';
     const satellite = mode === 'satellite';
     Plotly.restyle(plot, { visible: !satellite }, [0]);
     Plotly.restyle(plot, { visible: satellite }, [1]);
     if (!satellite) {
       Plotly.restyle(plot, {
-        surfacecolor: [elevation ? data.z : data.hillshade],
-        colorscale: [elevation ? elevationScale : shadeScale],
-        cmin: elevation ? data.minElevation : 0,
-        cmax: elevation ? data.maxElevation : 255,
-        'colorbar.title.text': elevation ? 'Elevación<br>(m.s.n.m.)' : 'Relieve<br>sombreado',
-        showscale: elevation
+        surfacecolor: [data.z],
+        colorscale: [elevationScale],
+        cmin: data.minElevation,
+        cmax: data.maxElevation,
+        'colorbar.title.text': 'Elevación<br>(m.s.n.m.)',
+        showscale: true
       }, [0]);
     }
     contoursButton.disabled = satellite;
-    contoursButton.title = satellite ? 'Las curvas están disponibles en las coloraciones de elevación y relieve' : '';
+    contoursButton.title = satellite ? 'Las curvas están disponibles en la coloración de elevación' : '';
     colorButtons.forEach(button => button.classList.toggle('active', button.dataset.colorMode === mode));
     updateSourceLabel();
   }
@@ -284,7 +282,7 @@
   Plotly.newPlot(plot, [surface, satelliteMesh], layout, config)
     .then(() => {
       loading.hidden = true;
-      if (['elevation', 'shade', 'satellite'].includes(requestedColorMode)) {
+      if (['elevation', 'satellite'].includes(requestedColorMode)) {
         setColorMode(requestedColorMode);
       }
     })

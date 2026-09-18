@@ -13,7 +13,6 @@ from pyproj import Transformer
 PROJECT = Path(__file__).resolve().parents[1]
 ROOT = PROJECT.parent
 DEM = ROOT / "ALOS_PALSAR" / "AP_27468_PLR_F0160_RT1" / "AP_27468_PLR_F0160_RT1.dem.tif"
-HILLSHADE = ROOT / "ALOS_PALSAR" / "HILLSHADE_EXAGERADO_Z5_BUFFER_200M.tif"
 OUT = PROJECT / "dist" / "terrain-data.js"
 SATELLITE = PROJECT / "dist" / "assets" / "satellite-texture.jpg"
 
@@ -55,35 +54,16 @@ ys = y0 - (np.arange(r0, r1) + 0.5) * py
 X, Y = np.meshgrid(xs, ys)
 inside = contains_xy(area, X, Y)
 
-shade, spx, spy, sx0, sy0, shade_nodata = geotiff(HILLSHADE)
-shade_valid = shade != shade_nodata
-shade_nearest = distance_transform_edt(~shade_valid, return_distances=False, return_indices=True)
-shade = shade[tuple(shade_nearest)]
-
-# The two derived rasters share the same 12.5 m grid and near-identical crop.
-# Recompute hillshade from DEM gradients here to ensure exact alignment.
-gy, gx = np.gradient(z, py, px)
-zf = 5.0
-az = np.deg2rad(315.0)
-alt = np.deg2rad(35.0)
-nx, ny, nz = -zf * gx, -zf * gy, np.ones_like(z)
-norm = np.sqrt(nx * nx + ny * ny + nz * nz)
-sun = (np.cos(alt) * np.sin(az), np.cos(alt) * np.cos(az), np.sin(alt))
-shade = np.clip((nx * sun[0] + ny * sun[1] + nz * sun[2]) / norm, 0, 1) * 255
-
 # About 135x136 cells: smooth rotation on mobile without losing the 30 m source detail.
 step = 2
 z = z[::step, ::step]
-shade = shade[::step, ::step]
 inside = inside[::step, ::step]
 xs = xs[::step]
 ys = ys[::step]
 
 z_out = []
-shade_out = []
-for row_z, row_s, row_mask in zip(z, shade, inside):
+for row_z, row_mask in zip(z, inside):
     z_out.append([round(float(v), 1) if keep else None for v, keep in zip(row_z, row_mask)])
-    shade_out.append([round(float(v), 1) if keep else None for v, keep in zip(row_s, row_mask)])
 
 x_utm = [round(float(x), 3) for x in xs]
 y_utm = [round(float(y), 3) for y in ys]
@@ -100,7 +80,6 @@ payload = {
     "x": x_utm,
     "y": y_utm,
     "z": z_out,
-    "hillshade": shade_out,
     "satellite": satellite_colors,
     "minElevation": 0,
     "maxElevation": 55,
