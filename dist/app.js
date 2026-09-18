@@ -3,6 +3,8 @@
   const plot = document.getElementById('terrain-plot');
   const satelliteMapElement = document.getElementById('satellite-map');
   const sourceLabel = document.getElementById('source-label');
+  const terrainCoordinate = document.getElementById('terrain-coordinate');
+  const mapCoordinate = document.getElementById('map-coordinate');
   const loading = document.getElementById('loading');
   const error = document.getElementById('error');
   const exaggeration = document.getElementById('exaggeration');
@@ -26,6 +28,9 @@
   let contoursVisible = true;
   let satelliteMap;
   let studyAreaBounds;
+  let mapCursorMarker;
+  let cursorClearTimer;
+  let lastCursorKey;
 
   function zAspect() {
     return 0.055 * Number(exaggeration.value);
@@ -122,6 +127,22 @@
   }
 
   const satelliteMesh = buildSatelliteMesh();
+  const synchronizedMarker = {
+    type: 'scatter3d',
+    mode: 'markers',
+    x: [],
+    y: [],
+    z: [],
+    hoverinfo: 'skip',
+    showlegend: false,
+    marker: {
+      size: 6,
+      color: '#00cba9',
+      symbol: 'diamond',
+      line: { color: '#ffffff', width: 2 },
+      opacity: 1
+    }
+  };
 
   const layout = {
     autosize: true,
@@ -166,6 +187,104 @@
     modeBarButtonsToRemove: ['toImage', 'sendDataToCloud', 'lasso2d', 'select2d']
   };
   const requestedColorMode = new URLSearchParams(window.location.search).get('color');
+  const utm20n = '+proj=utm +zone=20 +datum=WGS84 +units=m +no_defs';
+  const coordinateFormatter = new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  });
+
+  function nearestTerrainPoint(easting, northing) {
+    const xStep = data.x[1] - data.x[0];
+    const yStep = data.y[1] - data.y[0];
+    const column = Math.round((easting - data.x[0]) / xStep);
+    const row = Math.round((northing - data.y[0]) / yStep);
+    if (column < 0 || column >= data.x.length || row < 0 || row >= data.y.length) return null;
+
+    let nearest = null;
+    for (let radius = 0; radius <= 5 && !nearest; radius += 1) {
+      for (let rowOffset = -radius; rowOffset <= radius; rowOffset += 1) {
+        for (let columnOffset = -radius; columnOffset <= radius; columnOffset += 1) {
+          const candidateRow = row + rowOffset;
+          const candidateColumn = column + columnOffset;
+          if (candidateRow < 0 || candidateRow >= data.y.length || candidateColumn < 0 || candidateColumn >= data.x.length) continue;
+          const elevation = data.z[candidateRow][candidateColumn];
+          if (elevation === null) continue;
+          const distance = Math.hypot(
+            data.x[candidateColumn] - easting,
+            data.y[candidateRow] - northing
+          );
+          if (!nearest || distance < nearest.distance) {
+            nearest = {
+              x: data.x[candidateColumn],
+              y: data.y[candidateRow],
+              z: elevation,
+              distance
+            };
+          }
+        }
+      }
+    }
+    return nearest;
+  }
+
+  function synchronizedLabel(point) {
+    return `E ${coordinateFormatter.format(point.x)} m · N ${coordinateFormatter.format(point.y)} m · Elev. ${coordinateFormatter.format(point.z)} m.s.n.m.`;
+  }
+
+  function showSynchronizedCursor(point) {
+    if (!point) {
+      scheduleSynchronizedCursorClear();
+      return;
+    }
+    window.clearTimeout(cursorClearTimer);
+    const cursorKey = `${point.x}:${point.y}`;
+    if (cursorKey === lastCursorKey) return;
+    lastCursorKey = cursorKey;
+
+    Plotly.restyle(plot, {
+      x: [[point.x]],
+      y: [[point.y]],
+      z: [[point.z + 0.8]]
+    }, [2]);
+
+    const [longitude, latitude] = proj4(utm20n, 'EPSG:4326', [point.x, point.y]);
+    if (!mapCursorMarker) {
+      mapCursorMarker = L.circleMarker([latitude, longitude], {
+        radius: 8,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#00cba9',
+        fillOpacity: 1,
+        opacity: 1,
+        className: 'sync-cursor-marker',
+        interactive: false
+      }).addTo(satelliteMap);
+    } else {
+      mapCursorMarker.setLatLng([latitude, longitude]);
+    }
+
+    const label = synchronizedLabel(point);
+    terrainCoordinate.textContent = label;
+    mapCoordinate.textContent = label;
+    terrainCoordinate.hidden = false;
+    mapCoordinate.hidden = false;
+  }
+
+  function clearSynchronizedCursor() {
+    lastCursorKey = null;
+    Plotly.restyle(plot, { x: [[]], y: [[]], z: [[]] }, [2]);
+    if (mapCursorMarker && satelliteMap) {
+      satelliteMap.removeLayer(mapCursorMarker);
+      mapCursorMarker = null;
+    }
+    terrainCoordinate.hidden = true;
+    mapCoordinate.hidden = true;
+  }
+
+  function scheduleSynchronizedCursorClear() {
+    window.clearTimeout(cursorClearTimer);
+    cursorClearTimer = window.setTimeout(clearSynchronizedCursor, 60);
+  }
 
   function setColorMode(mode) {
     colorMode = mode;
@@ -232,6 +351,12 @@
 
     studyAreaBounds = bufferLayer.getBounds();
     fitStudyArea();
+
+    satelliteMap.on('mousemove', event => {
+      const [easting, northing] = proj4('EPSG:4326', utm20n, [event.latlng.lng, event.latlng.lat]);
+      showSynchronizedCursor(nearestTerrainPoint(easting, northing));
+    });
+    satelliteMapElement.addEventListener('mouseleave', scheduleSynchronizedCursorClear);
   }
 
   function fitStudyArea() {
@@ -267,16 +392,22 @@
     }
   }
 
-  if (!window.Plotly || !data) {
+  if (!window.Plotly || !window.L || !window.proj4 || !data) {
     loading.hidden = true;
     error.hidden = false;
     return;
   }
 
-  Plotly.newPlot(plot, [surface, satelliteMesh], layout, config)
+  Plotly.newPlot(plot, [surface, satelliteMesh, synchronizedMarker], layout, config)
     .then(() => {
       loading.hidden = true;
       initializeSatelliteMap();
+      plot.on('plotly_hover', event => {
+        const hoveredPoint = event.points?.[0];
+        if (!hoveredPoint || hoveredPoint.curveNumber === 2) return;
+        showSynchronizedCursor(nearestTerrainPoint(Number(hoveredPoint.x), Number(hoveredPoint.y)));
+      });
+      plot.on('plotly_unhover', scheduleSynchronizedCursorClear);
       if (['elevation', 'satellite'].includes(requestedColorMode)) {
         setColorMode(requestedColorMode);
       }

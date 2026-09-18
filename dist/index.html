@@ -40,11 +40,13 @@
         <section class="view-pane terrain-pane" aria-label="Modelo tridimensional">
           <span class="pane-heading">Modelo 3D</span>
           <div id="terrain-plot" role="img" aria-label="Superficie tridimensional interactiva del terreno"></div>
+          <div id="terrain-coordinate" class="coordinate-readout" hidden></div>
           <div id="touch-hint" class="touch-hint">Arrastra para rotar · Pellizca para acercar</div>
         </section>
         <section class="view-pane satellite-pane" aria-label="Imagen satelital">
           <span class="pane-heading">Imagen satelital</span>
           <div id="satellite-map" role="region" aria-label="Imagen satelital del área Manolo"></div>
+          <div id="map-coordinate" class="coordinate-readout" hidden></div>
           <div id="satellite-legend" class="map-legend">
             <p class="map-legend-title">Área de estudio</p>
             <span><i class="legend-line boundary-line"></i>Levantamiento preliminar</span>
@@ -88,6 +90,7 @@
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/proj4@2.21.0/dist/proj4.js"></script>
   <script src="./terrain-data.js"></script>
   <script src="./app.js"></script>
 </body>
