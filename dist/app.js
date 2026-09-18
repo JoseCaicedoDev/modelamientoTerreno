@@ -1,7 +1,17 @@
-import { formatArea, formatCoordinateLabel, formatDistance, formatElevation, MEASURE_COLOR, UTM_20N } from './js/config.js';
+import {
+  formatArea,
+  formatCoordinateLabel,
+  formatDistance,
+  formatElevation,
+  formatVolume,
+  MEASURE_COLOR,
+  UTM_20N
+} from './js/config.js';
 import { createTerrainModel } from './js/domain/terrain.js';
 import { createGrid } from './js/domain/grid.js';
 import { measurePath } from './js/domain/measure.js';
+import { createFloodModel } from './js/domain/flood.js';
+import { packColor } from './js/adapters/raster-overlay.js';
 import { createTerrainPlot } from './js/adapters/terrain-plot.js';
 import { createSatelliteMap } from './js/adapters/satellite-map.js';
 import { createProfileChart } from './js/ui/profile-chart.js';
@@ -34,6 +44,13 @@ const elements = Object.freeze({
   measurePanel: byId('measure-panel'),
   measureStats: byId('measure-stats'),
   measureClose: byId('measure-close'),
+  floodTool: byId('flood-tool'),
+  floodPanel: byId('flood-panel'),
+  floodStats: byId('flood-stats'),
+  floodClose: byId('flood-close'),
+  floodLevel: byId('flood-level'),
+  floodLevelValue: byId('flood-level-value'),
+  floodConnected: byId('flood-connected'),
   resetCamera: byId('reset-camera'),
   touchHint: byId('touch-hint'),
   colorButtons: [...document.querySelectorAll('[data-color-mode]')]
@@ -180,6 +197,92 @@ function startApplication() {
     measurePanel.show();
   }
 
+  const floodPanel = createResultPanel({
+    panel: elements.floodPanel,
+    stats: elements.floodStats,
+    pane: elements.satellitePane,
+    visibleClass: 'panel-visible',
+    closeButton: elements.floodClose,
+    onClose: () => tools.deactivateAll()
+  });
+
+  const flood = createFloodModel(grid);
+  let floodRaster = null;
+  let floodFrame = 0;
+
+  function prepareFloodSlider() {
+    const minimum = Math.floor(flood.minimum);
+    const maximum = Math.ceil(flood.maximum);
+    elements.floodLevel.min = String(minimum);
+    elements.floodLevel.max = String(maximum);
+    if (!elements.floodLevel.dataset.ready) {
+      elements.floodLevel.value = String(Math.round(minimum + (maximum - minimum) * 0.25));
+      elements.floodLevel.dataset.ready = 'si';
+    }
+  }
+
+  // Azul más oscuro cuanto mayor es la lámina de agua, hasta 5 m de profundidad.
+  function floodColors(result) {
+    const colors = new Uint32Array(grid.cellCount);
+    const elevations = grid.elevationArray();
+    for (let index = 0; index < result.mask.length; index += 1) {
+      if (!result.mask[index]) continue;
+      const depth = Math.min(1, (result.nivel - elevations[index]) / 5);
+      colors[index] = packColor(
+        Math.round(96 - 60 * depth),
+        Math.round(178 - 70 * depth),
+        Math.round(226 - 40 * depth),
+        Math.round(140 + 70 * depth)
+      );
+    }
+    return colors;
+  }
+
+  function updateFlood() {
+    const level = Number(elements.floodLevel.value);
+    const conectado = elements.floodConnected.checked;
+    const result = flood.floodAt(level, { conectado });
+    elements.floodLevelValue.textContent = formatElevation(level);
+    terrainPlot.setWaterLevel(level);
+
+    window.cancelAnimationFrame(floodFrame);
+    floodFrame = window.requestAnimationFrame(() => {
+      if (!floodRaster) floodRaster = satelliteMap.createRaster({ grid, opacity: 0.72, className: 'flood-raster' });
+      floodRaster.show();
+      floodRaster.render(floodColors(result));
+    });
+
+    floodPanel.setStats([
+      ['Cota simulada', formatElevation(level)],
+      ['Área inundada', formatArea(result.area)],
+      ['Volumen', formatVolume(result.volumen)],
+      ['Del área de estudio', `${((result.area / flood.validArea) * 100).toFixed(1)} %`]
+    ]);
+    floodPanel.show();
+  }
+
+  tools.register('inundacion', {
+    button: elements.floodTool,
+    activate: () => {
+      prepareFloodSlider();
+      updateFlood();
+    },
+    deactivate: () => {
+      floodRaster?.hide();
+      terrainPlot.setWaterLevel(null);
+      floodPanel.hide();
+    }
+  });
+
+  elements.floodTool.addEventListener('click', () => tools.toggle('inundacion'));
+  elements.floodLevel.addEventListener('input', () => {
+    if (tools.isActive('inundacion')) updateFlood();
+  });
+  elements.floodConnected.addEventListener('change', () => {
+    if (tools.isActive('inundacion')) updateFlood();
+  });
+  elements.floodPanel.addEventListener('click', event => event.stopPropagation());
+
   function renderProfile(start, end) {
     const profile = terrain.sampleLine(start, end);
     if (!profileChart.render(profile)) return;
@@ -259,8 +362,7 @@ function startApplication() {
   terrainPlot.initialize(Number(elements.exaggeration.value))
     .then(() => {
       satelliteMap.initialize();
-      const requestedMode = new URLSearchParams(window.location.search).get('color');
-      if (['elevation', 'satellite'].includes(requestedMode)) setColorMode(requestedMode);
+      applyUrlParameters();
       elements.loading.hidden = true;
     })
     .catch(error => {
@@ -268,6 +370,23 @@ function startApplication() {
       elements.loading.hidden = true;
       elements.error.hidden = false;
     });
+
+  // Parámetros de consulta: permiten reproducir un estado exacto en capturas y enlaces.
+  function applyUrlParameters() {
+    const parameters = new URLSearchParams(window.location.search);
+    const requestedMode = parameters.get('color');
+    if (['elevation', 'satellite'].includes(requestedMode)) setColorMode(requestedMode);
+
+    const herramienta = parameters.get('herramienta');
+    if (!herramienta) return;
+    if (herramienta === 'inundacion') {
+      prepareFloodSlider();
+      const cota = Number(parameters.get('cota'));
+      if (Number.isFinite(cota) && parameters.has('cota')) elements.floodLevel.value = String(cota);
+      if (parameters.get('conectado') === 'si') elements.floodConnected.checked = true;
+    }
+    tools.activate(herramienta);
+  }
 
   window.setTimeout(() => { elements.touchHint.style.opacity = '0'; }, 3600);
 }

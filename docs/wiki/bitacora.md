@@ -2,6 +2,18 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Simulación de nivel de agua por cota
+
+Deslizador de cota que inunda las dos vistas a la vez: mancha azul sobre el mapa con la capa
+canvas y lámina translúcida en el 3D. Informa área inundada, volumen y porcentaje del área, con
+un modo opcional que solo cuenta el agua conectada con el exterior
+([`domain/flood.js`](../../dist/js/domain/flood.js)).
+
+Con cota 12 m: 71,44 ha, 4,03 hm³ y 8,9 % del área, idénticos al cálculo hecho aparte sobre
+`terrain-data.js`. Se añadieron los parámetros de consulta `?herramienta=`, `?cota=` y
+`?conectado=` para reproducir estados exactos, y el deslizador da uso a `actualMinElevation` y
+`actualMaxElevation`. → [Herramientas de análisis](herramientas-analisis.md)
+
 ## 2026-09-18 — Medición de distancias y áreas
 
 Nueva herramienta en el panel satelital: polilínea con vértices exactos (sin ajustar a la celda)

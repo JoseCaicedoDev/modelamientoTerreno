@@ -50,6 +50,9 @@
             <button id="measure-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Medir distancias y áreas" data-tooltip="Medir distancias y áreas">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 15 6-6 6 6-6 6-6-6Z"/><path d="M13 5h8v8"/><path d="m21 5-7 7"/></svg>
             </button>
+            <button id="flood-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Simular nivel de agua" data-tooltip="Nivel de agua">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14c2.5-2 4.5 2 7 0s4.5-2 7 0 2.5 0 4-1"/><path d="M3 19c2.5-2 4.5 2 7 0s4.5-2 7 0 2.5 0 4-1"/><path d="M12 3v6"/><path d="m9 6 3 3 3-3"/></svg>
+            </button>
           </div>
           <div id="satellite-map" role="region" aria-label="Imagen satelital del área de estudio"></div>
           <div id="map-coordinate" class="coordinate-readout" hidden></div>
@@ -69,6 +72,26 @@
             </header>
             <svg id="profile-chart" class="profile-chart" viewBox="0 0 640 210" role="img" aria-label="Gráfico del perfil topográfico"></svg>
             <div id="profile-stats" class="result-stats"></div>
+          </section>
+
+          <section id="flood-panel" class="result-panel" aria-label="Simulación de nivel de agua" hidden>
+            <header class="result-header">
+              <div>
+                <span class="result-overline">ANÁLISIS DEL TERRENO</span>
+                <h2>Nivel de agua</h2>
+              </div>
+              <button id="flood-close" class="result-close" type="button" aria-label="Cerrar simulación de nivel de agua">×</button>
+            </header>
+            <div class="panel-control">
+              <label for="flood-level">Cota simulada <output id="flood-level-value">0,0 m</output></label>
+              <input id="flood-level" type="range" min="0" max="10" step="0.5" value="0">
+            </div>
+            <label class="panel-check">
+              <input id="flood-connected" type="checkbox">
+              Solo agua conectada con el exterior
+            </label>
+            <div id="flood-stats" class="result-stats"></div>
+            <p class="result-note">Estimación sobre un DEM de 25 m suavizado. No sustituye un estudio hidráulico.</p>
           </section>
 
           <section id="measure-panel" class="result-panel" aria-label="Medición de distancias y áreas" hidden>

@@ -12,6 +12,7 @@ Los botones viven en `.pane-tools`, arriba a la izquierda del panel satelital
 | --- | --- | --- |
 | Perfil topográfico | [`domain/terrain.js`](../../dist/js/domain/terrain.js) (`sampleLine`) | Implementada |
 | Medición de distancias y áreas | [`domain/measure.js`](../../dist/js/domain/measure.js) | Implementada |
+| Simulación de nivel de agua | [`domain/flood.js`](../../dist/js/domain/flood.js) | Implementada |
 
 ## Perfil topográfico
 
@@ -59,3 +60,49 @@ coordenadas UTM.
 [`tests/measure.test.mjs`](../../tests/measure.test.mjs) cubre polilínea abierta, longitud drapeada
 en pendiente, área y perímetro de un polígono, factor de drapeado sobre una rampa de pendiente
 conocida y el descarte de recorridos de un solo vértice.
+
+## Simulación de nivel de agua
+
+Un deslizador de cota inunda el terreno en las dos vistas a la vez: en el mapa como mancha azul y
+en el modelo 3D como lámina translúcida de la que emergen las lomas.
+
+### Cómo se calcula
+
+[`domain/flood.js`](../../dist/js/domain/flood.js) ordena una sola vez las celdas válidas por
+elevación y acumula sus cotas. Con eso, el área y el volumen de cualquier cota salen de una
+búsqueda binaria y una resta, sin recorrer la malla:
+
+- `área = celdas_por_debajo × 625 m²`
+- `volumen = (celdas × cota − suma de cotas) × 625 m²`
+
+La casilla **"solo agua conectada con el exterior"** cambia el criterio: en lugar de marcar toda
+celda bajo la cota, hace un recorrido en anchura desde las celdas del borde del área y descarta las
+depresiones cerradas que no tienen aporte.
+
+El rango del deslizador usa `actualMinElevation` y `actualMaxElevation` del payload, que hasta
+ahora se publicaban sin que nadie los leyera.
+
+### Representación
+
+- **Mapa**: [`adapters/raster-overlay.js`](../../dist/js/adapters/raster-overlay.js) pinta un azul
+  cuya intensidad crece con la lámina de agua hasta los 5 m. El repintado se agrupa con
+  `requestAnimationFrame` para que arrastrar el deslizador no encole trabajo.
+- **3D**: un plano `mesh3d` recortado a la zona de influencia, con `opacity: 0.55`. Cambiar la cota
+  es un `restyle` de su `z`; la intersección con el relieve la resuelve el z-buffer. Es la única
+  traza translúcida de la escena, para evitar los artefactos de ordenación de Plotly.
+
+### Contraste
+
+Con cota 12 m el visor informa 71,44 ha, 4,03 hm³ y 8,9 % del área. El mismo cálculo hecho aparte
+sobre `terrain-data.js` da exactamente esos valores.
+
+### Límites
+
+El resultado es una inundación estática por cota, no un modelo hidráulico: no considera caudales,
+tiempo, infiltración ni obras. El panel lo advierte.
+
+### Pruebas
+
+[`tests/flood.test.mjs`](../../tests/flood.test.mjs) comprueba el rango de cotas, el área y el
+volumen de la cota simple, el descarte de una depresión aislada en modo conectado, la inundación
+total con la cota máxima y la ausencia de agua por debajo del mínimo.
