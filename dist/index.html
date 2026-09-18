@@ -55,25 +55,29 @@
         </section>
       </div>
 
-      <aside class="controls" aria-label="Controles del modelo">
-        <p class="panel-overline">VISUALIZACIÓN</p>
-        <div class="control-group">
-          <span class="control-label">Coloración</span>
-          <div class="segmented" role="group" aria-label="Coloración de la superficie">
-            <button class="segmented-button active" data-color-mode="elevation" type="button">Elevación</button>
-            <button class="segmented-button" data-color-mode="satellite" type="button">Satélite</button>
+      <aside class="controls" aria-label="Herramientas del modelo">
+        <button class="tool-button active" data-color-mode="elevation" type="button" aria-label="Coloración por elevación" data-tooltip="Elevación">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.5 8.1 10l3.2 4.2L15.2 7 21 17.5H3Z"/><path d="M5.5 20h13"/></svg>
+        </button>
+        <button class="tool-button" data-color-mode="satellite" type="button" aria-label="Coloración satelital" data-tooltip="Satélite">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="m5 17 4.2-4 3 2.7 2.8-3 4 4.3"/></svg>
+        </button>
+        <div class="tool-popover-wrap">
+          <button id="exaggeration-toggle" class="tool-button" type="button" aria-label="Ajustar exageración vertical" aria-expanded="false" aria-controls="exaggeration-panel" data-tooltip="Exageración vertical">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 14h10M9 10h6M11 6h2"/></svg>
+            <span id="exaggeration-value" class="tool-value">2×</span>
+          </button>
+          <div id="exaggeration-panel" class="tool-popover" hidden>
+            <label for="exaggeration">Exageración vertical</label>
+            <input id="exaggeration" type="range" min="1" max="10" step="1" value="2">
           </div>
         </div>
-
-        <div class="control-group">
-          <label class="control-label" for="exaggeration">Exageración vertical <output id="exaggeration-value">2×</output></label>
-          <input id="exaggeration" type="range" min="1" max="10" step="1" value="2">
-        </div>
-
-        <div class="button-row">
-          <button id="contours-toggle" class="utility-button active" type="button" aria-pressed="true">Curvas 10 m</button>
-          <button id="reset-camera" class="utility-button" type="button">Restablecer vista</button>
-        </div>
+        <button id="contours-toggle" class="tool-button active" type="button" aria-pressed="true" aria-label="Mostrar u ocultar curvas de nivel" data-tooltip="Curvas 10 m">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7c3-3 5 3 8 0s5 3 10 0M3 12c3-3 5 3 8 0s5 3 10 0M3 17c3-3 5 3 8 0s5 3 10 0"/></svg>
+        </button>
+        <button id="reset-camera" class="tool-button" type="button" aria-label="Restablecer vista 3D" data-tooltip="Restablecer vista">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a8 8 0 1 1 2.3 6.2"/><path d="M4 5v6h6"/><path d="m9 15 3-3 3 3"/></svg>
+        </button>
       </aside>
 
       <div class="viewer-meta">

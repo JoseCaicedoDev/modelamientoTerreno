@@ -9,6 +9,8 @@
   const error = document.getElementById('error');
   const exaggeration = document.getElementById('exaggeration');
   const exaggerationValue = document.getElementById('exaggeration-value');
+  const exaggerationToggle = document.getElementById('exaggeration-toggle');
+  const exaggerationPanel = document.getElementById('exaggeration-panel');
   const contoursButton = document.getElementById('contours-toggle');
   const resetButton = document.getElementById('reset-camera');
   const colorButtons = [...document.querySelectorAll('[data-color-mode]')];
@@ -415,8 +417,24 @@
     .catch(() => { loading.hidden = true; error.hidden = false; });
 
   exaggeration.addEventListener('input', () => {
-    exaggerationValue.value = `${exaggeration.value}×`;
+    exaggerationValue.textContent = `${exaggeration.value}×`;
     Plotly.relayout(plot, { 'scene.aspectratio.z': zAspect() });
+  });
+
+  function setExaggerationPanel(open) {
+    exaggerationPanel.hidden = !open;
+    exaggerationToggle.classList.toggle('open', open);
+    exaggerationToggle.setAttribute('aria-expanded', String(open));
+  }
+
+  exaggerationToggle.addEventListener('click', event => {
+    event.stopPropagation();
+    setExaggerationPanel(exaggerationPanel.hidden);
+  });
+  exaggerationPanel.addEventListener('click', event => event.stopPropagation());
+  document.addEventListener('click', () => setExaggerationPanel(false));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') setExaggerationPanel(false);
   });
 
   colorButtons.forEach(button => button.addEventListener('click', () => setColorMode(button.dataset.colorMode)));
