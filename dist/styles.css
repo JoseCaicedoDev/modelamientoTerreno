@@ -342,6 +342,14 @@ input[type="range"] {
   color: var(--brand-dark);
 }
 
+.map-reset { margin-top: 8px !important; }
+
+.map-reset a {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
 .touch-hint {
   position: absolute;
   z-index: 1000;

@@ -29,6 +29,7 @@
   let colorMode = 'elevation';
   let contoursVisible = true;
   let satelliteMap;
+  let studyAreaBounds;
   let viewMode = 'terrain';
 
   function zAspect() {
@@ -208,6 +209,7 @@
     });
 
     L.control.zoom({ position: 'topright' }).addTo(satelliteMap);
+    addResetAreaControl();
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(satelliteMap);
 
     L.tileLayer(
@@ -233,7 +235,33 @@
       fillOpacity: 0.12
     }).addTo(satelliteMap);
 
-    satelliteMap.fitBounds(bufferLayer.getBounds(), { padding: [34, 34] });
+    studyAreaBounds = bufferLayer.getBounds();
+    fitStudyArea();
+  }
+
+  function fitStudyArea() {
+    if (studyAreaBounds) satelliteMap.fitBounds(studyAreaBounds, { padding: [34, 34] });
+  }
+
+  function addResetAreaControl() {
+    const control = L.control({ position: 'topright' });
+    control.onAdd = () => {
+      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control map-reset');
+      const button = L.DomUtil.create('a', '', container);
+      button.href = '#';
+      button.role = 'button';
+      button.title = 'Volver al área de estudio';
+      button.setAttribute('aria-label', 'Volver al área de estudio');
+      button.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">'
+        + '<path d="M3 8V4h4M21 8V4h-4M3 16v4h4M21 16v4h-4"/><circle cx="12" cy="12" r="3.2"/></svg>';
+      L.DomEvent.on(button, 'click', event => {
+        L.DomEvent.stop(event);
+        fitStudyArea();
+      });
+      L.DomEvent.disableClickPropagation(container);
+      return container;
+    };
+    control.addTo(satelliteMap);
   }
 
   function updateSourceLabel() {

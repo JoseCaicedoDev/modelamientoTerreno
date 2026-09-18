@@ -19,11 +19,23 @@ estaba `hidden` y Leaflet necesita medirlo ya visible.
 | Zona de influencia | línea `#0396a6` de 2 px, discontinua `8 7`, relleno 8 % | `data.buffer` |
 | Área de estudio | línea `#00cba9` de 3 px, relleno 12 % | `data.boundary` |
 
-Controles añadidos: zoom arriba a la derecha y escala métrica (`imperial: false`) abajo a la
-izquierda. La atribución de Esri se mantiene activa, como exige el servicio.
+Controles añadidos: zoom arriba a la derecha, **volver al área de estudio** justo debajo, y escala
+métrica (`imperial: false`) abajo a la izquierda. La atribución de Esri se mantiene activa, como
+exige el servicio.
 
 El encuadre inicial es `fitBounds` sobre el polígono del buffer con 34 px de margen — nunca se fija
 un centro o zoom a mano, así que el mapa sigue automáticamente cualquier cambio del área.
+
+## Volver al área de estudio
+
+`addResetAreaControl` construye un control Leaflet propio (`L.control` con `onAdd`) con las clases
+`leaflet-bar leaflet-control map-reset`, de modo que hereda el aspecto de los botones de zoom y se
+apila bajo ellos. Su icono es un SVG en línea (marco con retícula) que hereda `currentColor`.
+
+Al pulsarlo llama a `fitStudyArea`, la misma función que hace el encuadre inicial, sobre
+`studyAreaBounds` — los límites del polígono del buffer, guardados al crear la capa. `L.DomEvent.stop`
+evita que el clic navegue al `#` del enlace y `disableClickPropagation` impide que llegue al mapa
+como un clic de navegación.
 
 ## Diferencias con la coloración "Satélite" del 3D
 

@@ -28,9 +28,7 @@ alguien que retome el proyecto debería conocer.
 
 ## Estado del árbol de trabajo
 
-Los cambios que retiran el modo "Relieve" (script, `app.js`, `index.html`, `styles.css`, README y
-`terrain-data.js` regenerado) **están sin commitear**. Hasta que se commiteen, lo publicado en
-GitHub Pages sigue siendo la versión de `cdadfeb`, que todavía incluye el relieve sombreado.
+El botón de "volver al área de estudio" (`app.js`, `styles.css`) **está sin commitear**.
 
 ## Frontend
 

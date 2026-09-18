@@ -2,13 +2,20 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
-## Sin commitear — Controles en barra inferior en móvil
+## Sin commitear — Botón de volver al área de estudio
+
+Control Leaflet propio bajo el zoom que reencuadra el mapa sobre la zona de influencia, con la
+misma llamada `fitBounds` del encuadre inicial. → [Vista satelital](vista-satelital.md)
+
+## `faac6f8` — Controles en barra inferior en móvil
 
 Por debajo de 760 px el panel de controles deja de flotar sobre el mapa y pasa a una barra al pie
 del visor, con los grupos repartidos en dos columnas y botones de 42 px. Solo CSS.
 → [Interfaz y marca](interfaz-y-marca.md)
 
-## Sin commitear — Retirada del relieve sombreado
+## `faac6f8` — Retirada del relieve sombreado
+
+(El mismo commit incorpora además la wiki y la guía del repositorio.)
 
 Se elimina la coloración "Relieve": desaparecen el cálculo del sombreado y la clave `hillshade` del
 payload, la escala gris y el tercer botón, la regla `.segmented.three-options` y el valor `shade`

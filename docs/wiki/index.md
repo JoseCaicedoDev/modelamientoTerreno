@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · árbol de trabajo posterior a `cdadfeb` (retirada del relieve sombreado y controles móviles al pie, sin commitear) · Sistema v2.2.0
+Actualizada el 2026-09-18 · commit `faac6f8` + botón de reencuadre sin commitear · Sistema v2.2.0
 
 ## Páginas
 
