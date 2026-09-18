@@ -3,6 +3,7 @@ import json
 
 import numpy as np
 import tifffile
+from PIL import Image
 from scipy.ndimage import distance_transform_edt, gaussian_filter
 from shapely import contains_xy
 from shapely.geometry import Polygon
@@ -14,6 +15,7 @@ ROOT = PROJECT.parent
 DEM = ROOT / "ALOS_PALSAR" / "AP_27468_PLR_F0160_RT1" / "AP_27468_PLR_F0160_RT1.dem.tif"
 HILLSHADE = ROOT / "ALOS_PALSAR" / "HILLSHADE_EXAGERADO_Z5_BUFFER_200M.tif"
 OUT = PROJECT / "dist" / "terrain-data.js"
+SATELLITE = PROJECT / "dist" / "assets" / "satellite-texture.jpg"
 
 COORDS = [
     (-63.42829165563067, 8.226326478478772),
@@ -86,11 +88,20 @@ for row_z, row_s, row_mask in zip(z, shade, inside):
 x_utm = [round(float(x), 3) for x in xs]
 y_utm = [round(float(y), 3) for y in ys]
 values = z[inside]
+satellite = np.asarray(Image.open(SATELLITE).convert("RGB"))
+expected_size = (len(ys), len(xs), 3)
+if satellite.shape != expected_size:
+    raise ValueError(f"Satellite texture shape {satellite.shape} does not match terrain grid {expected_size}")
+satellite_colors = [
+    [f"#{r:02x}{g:02x}{b:02x}" if keep else None for (r, g, b), keep in zip(row_rgb, row_mask)]
+    for row_rgb, row_mask in zip(satellite, inside)
+]
 payload = {
     "x": x_utm,
     "y": y_utm,
     "z": z_out,
     "hillshade": shade_out,
+    "satellite": satellite_colors,
     "minElevation": 0,
     "maxElevation": 55,
     "actualMinElevation": round(float(values.min()), 1),

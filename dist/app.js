@@ -30,6 +30,7 @@
   let colorMode = 'elevation';
   let contoursVisible = true;
   let satelliteMap;
+  let viewMode = 'terrain';
 
   function zAspect() {
     return 0.055 * Number(exaggeration.value);
@@ -73,6 +74,60 @@
     hovertemplate: 'Este UTM: %{x:,.1f} m<br>Norte UTM: %{y:,.1f} m<br>Elevación: %{z:.1f} m.s.n.m.<extra></extra>'
   };
 
+  function buildSatelliteMesh() {
+    const x = [];
+    const y = [];
+    const z = [];
+    const vertexcolor = [];
+    const vertexIndex = data.z.map(row => row.map(() => -1));
+
+    data.z.forEach((row, rowIndex) => {
+      row.forEach((elevation, columnIndex) => {
+        if (elevation === null) return;
+        vertexIndex[rowIndex][columnIndex] = x.length;
+        x.push(data.x[columnIndex]);
+        y.push(data.y[rowIndex]);
+        z.push(elevation);
+        vertexcolor.push(data.satellite[rowIndex][columnIndex]);
+      });
+    });
+
+    const i = [];
+    const j = [];
+    const k = [];
+    for (let row = 0; row < vertexIndex.length - 1; row += 1) {
+      for (let column = 0; column < vertexIndex[row].length - 1; column += 1) {
+        const northwest = vertexIndex[row][column];
+        const northeast = vertexIndex[row][column + 1];
+        const southwest = vertexIndex[row + 1][column];
+        const southeast = vertexIndex[row + 1][column + 1];
+        if ([northwest, northeast, southwest, southeast].some(index => index < 0)) continue;
+        i.push(northwest, northeast);
+        j.push(southwest, southwest);
+        k.push(northeast, southeast);
+      }
+    }
+
+    return {
+      type: 'mesh3d',
+      x,
+      y,
+      z,
+      i,
+      j,
+      k,
+      vertexcolor,
+      visible: false,
+      flatshading: false,
+      showscale: false,
+      lighting: { ambient: 0.88, diffuse: 0.5, specular: 0.02, roughness: 1, fresnel: 0 },
+      lightposition: { x: -120, y: -160, z: 220 },
+      hovertemplate: 'Este UTM: %{x:,.1f} m<br>Norte UTM: %{y:,.1f} m<br>Elevación: %{z:.1f} m.s.n.m.<extra></extra>'
+    };
+  }
+
+  const satelliteMesh = buildSatelliteMesh();
+
   const layout = {
     autosize: true,
     margin: { l: 0, r: 0, t: 0, b: 0 },
@@ -115,19 +170,28 @@
     scrollZoom: true,
     modeBarButtonsToRemove: ['toImage', 'sendDataToCloud', 'lasso2d', 'select2d']
   };
+  const requestedColorMode = new URLSearchParams(window.location.search).get('color');
 
   function setColorMode(mode) {
     colorMode = mode;
     const elevation = mode === 'elevation';
-    Plotly.restyle(plot, {
-      surfacecolor: [elevation ? data.z : data.hillshade],
-      colorscale: [elevation ? elevationScale : shadeScale],
-      cmin: elevation ? data.minElevation : 0,
-      cmax: elevation ? data.maxElevation : 255,
-      'colorbar.title.text': elevation ? 'Elevación<br>(m.s.n.m.)' : 'Relieve<br>sombreado',
-      showscale: elevation
-    }, [0]);
+    const satellite = mode === 'satellite';
+    Plotly.restyle(plot, { visible: !satellite }, [0]);
+    Plotly.restyle(plot, { visible: satellite }, [1]);
+    if (!satellite) {
+      Plotly.restyle(plot, {
+        surfacecolor: [elevation ? data.z : data.hillshade],
+        colorscale: [elevation ? elevationScale : shadeScale],
+        cmin: elevation ? data.minElevation : 0,
+        cmax: elevation ? data.maxElevation : 255,
+        'colorbar.title.text': elevation ? 'Elevación<br>(m.s.n.m.)' : 'Relieve<br>sombreado',
+        showscale: elevation
+      }, [0]);
+    }
+    contoursButton.disabled = satellite;
+    contoursButton.title = satellite ? 'Las curvas están disponibles en las coloraciones de elevación y relieve' : '';
     colorButtons.forEach(button => button.classList.toggle('active', button.dataset.colorMode === mode));
+    updateSourceLabel();
   }
 
   function setContours(next) {
@@ -174,7 +238,18 @@
     satelliteMap.fitBounds(bufferLayer.getBounds(), { padding: [34, 34] });
   }
 
+  function updateSourceLabel() {
+    if (viewMode === 'satellite') {
+      sourceLabel.textContent = 'World Imagery · Área Manolo y zona de influencia de 200 m';
+    } else if (colorMode === 'satellite') {
+      sourceLabel.textContent = 'World Imagery © Esri, Maxar, Earthstar Geographics y GIS User Community · sobre DEM SRTMGL1';
+    } else {
+      sourceLabel.textContent = 'DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160';
+    }
+  }
+
   function setViewMode(mode) {
+    viewMode = mode;
     const showSatellite = mode === 'satellite';
     plot.hidden = showSatellite;
     satelliteMapElement.hidden = !showSatellite;
@@ -184,9 +259,7 @@
     touchHint.textContent = showSatellite
       ? 'Arrastra para mover · Pellizca para acercar'
       : 'Arrastra para rotar · Pellizca para acercar';
-    sourceLabel.textContent = showSatellite
-      ? 'World Imagery · Área Manolo y zona de influencia de 200 m'
-      : 'DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160';
+    updateSourceLabel();
 
     viewButtons.forEach(button => {
       const active = button.dataset.viewMode === mode;
@@ -208,8 +281,13 @@
     return;
   }
 
-  Plotly.newPlot(plot, [surface], layout, config)
-    .then(() => { loading.hidden = true; })
+  Plotly.newPlot(plot, [surface, satelliteMesh], layout, config)
+    .then(() => {
+      loading.hidden = true;
+      if (['elevation', 'shade', 'satellite'].includes(requestedColorMode)) {
+        setColorMode(requestedColorMode);
+      }
+    })
     .catch(() => { loading.hidden = true; error.hidden = false; });
 
   exaggeration.addEventListener('input', () => {
