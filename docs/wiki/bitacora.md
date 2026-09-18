@@ -2,6 +2,23 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Zona de influencia ampliada a 500 m
+
+El modelo pasa de 200 m a **500 m** de zona de influencia: la malla crece de 136×134 a 160×158
+celdas de 25 m (18.776 con dato, 1.173,7 ha) y `terrain-data.js` de 246 KB a 344 KB. La elevación
+mínima real baja a -13,6 m.s.n.m. porque entra más terreno bajo junto a la laguna.
+
+Para poder regenerar el modelo se escribieron
+[`scripts/build_satellite_texture.py`](../../scripts/build_satellite_texture.py), que descarga las
+teselas de Esri World Imagery y las remuestrea a la malla promediando por celda, y
+[`scripts/terrain_grid.py`](../../scripts/terrain_grid.py), que centraliza polígono, buffer y
+submuestreo para los dos scripts. El payload publica `bufferMeters`, y la leyenda y el resumen de
+la cabecera se llenan desde el payload.
+
+Cifras de contraste actualizadas: inundación a 12 m da 190,88 ha y 19,87 hm³ (16,3 % del área);
+drenaje con 5 ha de cuenca da 33,65 km de cauces y 174,00 ha encharcadas desde 0,3 m, en 27 ms.
+→ [Área de estudio](area-de-estudio.md), [Canal de datos](canal-de-datos.md)
+
 ## 2026-09-18 — Capas KML y KMZ del usuario
 
 Carga de archivos propios sobre la imagen satelital, con botón y arrastrar y soltar. El KML se

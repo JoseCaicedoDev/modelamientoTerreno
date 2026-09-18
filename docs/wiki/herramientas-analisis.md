@@ -95,8 +95,8 @@ ahora se publicaban sin que nadie los leyera.
 
 ### Contraste
 
-Con cota 12 m el visor informa 71,44 ha, 4,03 hm³ y 8,9 % del área. El mismo cálculo hecho aparte
-sobre `terrain-data.js` da exactamente esos valores.
+Con cota 12 m el visor informa 190,88 ha, 19,87 hm³ y 16,3 % del área. El mismo cálculo hecho
+aparte sobre `terrain-data.js` da exactamente esos valores.
 
 ### Límites
 
@@ -128,8 +128,8 @@ calculan la primera vez que se activa la herramienta y quedan en memoria:
 4. **Acumulación**: una sola pasada de mayor a menor cota rellenada empujando el aporte de cada
    celda a su receptor. Sin recursión y sin riesgo de ciclos.
 
-Sobre la malla real (12.883 celdas válidas) los cuatro pasos tardan **unos 20 ms**, muy por debajo
-del límite de 50 ms que se fijó.
+Sobre la malla real (18.776 celdas válidas) los cuatro pasos tardan **unos 27 ms**, por debajo del
+límite de 50 ms que se fijó.
 
 ### Controles
 
@@ -143,9 +143,9 @@ traza 3D se redibujan al soltar (`change`), no en cada paso.
 
 ### Resultados sobre el área de estudio
 
-Con cuenca mínima de 5 ha y encharcamiento desde 0,3 m: **21,47 km de cauces** en 743 celdas y
-**106,13 ha encharcadas**, con una profundidad máxima de depresión de 9,1 m. El DEM rellenado nunca
-queda por debajo del original en ninguna de las 12.883 celdas.
+Con cuenca mínima de 5 ha y encharcamiento desde 0,3 m: **33,65 km de cauces** en 1.158 celdas y
+**174,00 ha encharcadas**, con una profundidad máxima de depresión de 9,1 m. El DEM rellenado nunca
+queda por debajo del original en ninguna de las 18.776 celdas.
 
 ### Límites
 

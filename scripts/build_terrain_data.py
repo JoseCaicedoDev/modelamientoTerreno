@@ -1,65 +1,54 @@
-from pathlib import Path
+"""Genera dist/terrain-data.js a partir del DEM y de la textura satelital.
+
+    python scripts/build_satellite_texture.py   # primero, si cambió la malla
+    python scripts/build_terrain_data.py
+
+El área de estudio y la malla se definen en terrain_grid.py, que comparte con el generador de la
+textura para que ambos productos queden alineados celda a celda.
+"""
+
 import json
 
 import numpy as np
-import tifffile
 from PIL import Image
 from scipy.ndimage import distance_transform_edt, gaussian_filter
 from shapely import contains_xy
-from shapely.geometry import Polygon
-from shapely.ops import transform
-from pyproj import Transformer
 
-PROJECT = Path(__file__).resolve().parents[1]
-ROOT = PROJECT.parent
-DEM = ROOT / "ALOS_PALSAR" / "AP_27468_PLR_F0160_RT1" / "AP_27468_PLR_F0160_RT1.dem.tif"
+from terrain_grid import (
+    BUFFER_METERS,
+    DEM,
+    PROJECT,
+    STEP,
+    axes,
+    crop_bounds,
+    geotiff,
+    study_area,
+)
+
 OUT = PROJECT / "dist" / "terrain-data.js"
 SATELLITE = PROJECT / "dist" / "assets" / "satellite-texture.jpg"
 
-COORDS = [
-    (-63.42829165563067, 8.226326478478772),
-    (-63.454478505244, 8.223544607534595),
-    (-63.45287913369275, 8.200374429668637),
-    (-63.42807181107277, 8.211912547418001),
-]
+boundary, area, area_wgs84 = study_area()
+dem, pixel_x, pixel_y, origin_x, origin_y, nodata = geotiff(DEM)
+first_row, last_row, first_column, last_column = crop_bounds(
+    area, pixel_x, pixel_y, origin_x, origin_y, dem.shape
+)
+z = dem[first_row:last_row, first_column:last_column]
 
-
-def geotiff(path):
-    with tifffile.TiffFile(path) as tf:
-        page = tf.pages[0]
-        arr = page.asarray().astype(float)
-        scale = page.tags["ModelPixelScaleTag"].value
-        tie = page.tags["ModelTiepointTag"].value
-        nodata = float(page.tags["GDAL_NODATA"].value)
-    return arr, float(scale[0]), float(scale[1]), float(tie[3]), float(tie[4]), nodata
-
-
-to_utm = Transformer.from_crs(4326, 32620, always_xy=True).transform
-to_wgs84 = Transformer.from_crs(32620, 4326, always_xy=True).transform
-area = transform(to_utm, Polygon(COORDS)).buffer(200)
-area_wgs84 = transform(to_wgs84, area)
-dem, px, py, x0, y0, nodata = geotiff(DEM)
-minx, miny, maxx, maxy = area.bounds
-c0 = max(0, int(np.floor((minx - x0) / px)) - 2)
-c1 = min(dem.shape[1], int(np.ceil((maxx - x0) / px)) + 3)
-r0 = max(0, int(np.floor((y0 - maxy) / py)) - 2)
-r1 = min(dem.shape[0], int(np.ceil((y0 - miny) / py)) + 3)
-z = dem[r0:r1, c0:c1]
+# Los huecos del DEM se rellenan con el valor válido más cercano y se suaviza el escalonado.
 valid = z != nodata
 nearest = distance_transform_edt(~valid, return_distances=False, return_indices=True)
 z = gaussian_filter(z[tuple(nearest)], 1)
 
-xs = x0 + (np.arange(c0, c1) + 0.5) * px
-ys = y0 - (np.arange(r0, r1) + 0.5) * py
+xs = origin_x + (np.arange(first_column, last_column) + 0.5) * pixel_x
+ys = origin_y - (np.arange(first_row, last_row) + 0.5) * pixel_y
 X, Y = np.meshgrid(xs, ys)
 inside = contains_xy(area, X, Y)
 
-# About 135x136 cells: smooth rotation on mobile without losing the 30 m source detail.
-step = 2
-z = z[::step, ::step]
-inside = inside[::step, ::step]
-xs = xs[::step]
-ys = ys[::step]
+# Submuestreo: rotación fluida en móvil sin perder el detalle real del origen.
+z = z[::STEP, ::STEP]
+inside = inside[::STEP, ::STEP]
+xs, ys = axes(first_row, last_row, first_column, last_column, pixel_x, pixel_y, origin_x, origin_y)
 
 z_out = []
 for row_z, row_mask in zip(z, inside):
@@ -71,7 +60,10 @@ values = z[inside]
 satellite = np.asarray(Image.open(SATELLITE).convert("RGB"))
 expected_size = (len(ys), len(xs), 3)
 if satellite.shape != expected_size:
-    raise ValueError(f"Satellite texture shape {satellite.shape} does not match terrain grid {expected_size}")
+    raise ValueError(
+        f"La textura satelital {satellite.shape} no coincide con la malla {expected_size}. "
+        "Ejecuta scripts/build_satellite_texture.py antes que este script."
+    )
 satellite_colors = [
     [f"#{r:02x}{g:02x}{b:02x}" if keep else None for (r, g, b), keep in zip(row_rgb, row_mask)]
     for row_rgb, row_mask in zip(satellite, inside)
@@ -88,8 +80,9 @@ payload = {
     "aspectY": round(float((ys[0] - ys[-1]) / (xs[-1] - xs[0])), 4),
     "crs": "EPSG:32620",
     "source": "SRTMGL1 / ALOS PALSAR RTC ALPSRP274680160",
-    "boundary": [[round(lat, 8), round(lon, 8)] for lon, lat in Polygon(COORDS).exterior.coords],
-    "buffer": [[round(lat, 8), round(lon, 8)] for lon, lat in area_wgs84.exterior.coords]
+    "bufferMeters": BUFFER_METERS,
+    "boundary": [[round(lat, 8), round(lon, 8)] for lon, lat in boundary.exterior.coords],
+    "buffer": [[round(lat, 8), round(lon, 8)] for lon, lat in area_wgs84.exterior.coords],
 }
 OUT.write_text("window.TERRAIN_DATA = " + json.dumps(payload, separators=(",", ":")) + ";\n", encoding="utf-8")
-print(f"{OUT} ({OUT.stat().st_size} bytes, {len(y_utm)}x{len(x_utm)} cells)")
+print(f"{OUT} ({OUT.stat().st_size} bytes, {len(y_utm)}x{len(x_utm)} celdas, buffer {BUFFER_METERS} m)")

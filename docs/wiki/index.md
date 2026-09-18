@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · capas KML y KMZ del usuario · Sistema v2.3.0
+Actualizada el 2026-09-18 · zona de influencia ampliada a 500 m · Sistema v2.3.0
 
 ## Páginas
 
@@ -11,7 +11,7 @@ Actualizada el 2026-09-18 · capas KML y KMZ del usuario · Sistema v2.3.0
 | --- | --- |
 | [Visión general](vision-general.md) | Qué es el proyecto, arquitectura completa, decisiones de fondo |
 | [Arquitectura frontend](arquitectura-frontend.md) | Módulos, dependencias, límites de responsabilidad y pruebas |
-| [Área de estudio](area-de-estudio.md) | Polígono, zona de influencia de 200 m, CRS y extensión |
+| [Área de estudio](area-de-estudio.md) | Polígono, zona de influencia de 500 m, CRS y extensión |
 | [Canal de datos](canal-de-datos.md) | `scripts/build_terrain_data.py` — de los GeoTIFF a `terrain-data.js` |
 | [Formato de terrain-data.js](formato-terrain-data.md) | Claves del payload, tipos, rangos y significado |
 | [Visor 3D](visor-3d.md) | `dist/app.js` — superficie Plotly, malla satelital, cámara, controles |

@@ -6,10 +6,12 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
 
 - `minElevation`/`maxElevation` se fijan en 0 y 55 en
   [`scripts/build_terrain_data.py`](../../scripts/build_terrain_data.py), mientras el payload también
-  informa valores reales cercanos a -9,4 y 53,2 m.s.n.m. Las elevaciones negativas se saturan en el
-  color inferior. Falta decidir si es una exclusión intencional del ruido próximo al agua.
-- La cabecera resume `0-54 m.s.n.m.`, valor editorial que no coincide exactamente con ninguna de las
-  parejas anteriores.
+  informa valores reales de -13,6 y 53,2 m.s.n.m. Con la zona de influencia de 500 m, el **6,0 % de
+  las celdas queda por debajo de 0 m** y se satura en el color inferior de la rampa. Falta decidir
+  si la escala debe seguir a los datos o si el recorte es una exclusión intencional del ruido
+  próximo al agua.
+- La cabecera ya no trae un valor escrito a mano: muestra el rango real del payload
+  (`-14 a 53 m.s.n.m.`), igual que la leyenda muestra `bufferMeters`.
 - La cabecera indica 30 m de resolución por el origen SRTMGL1, aunque la malla publicada queda en
   aproximadamente 25 m después del submuestreo del producto RTC. Conviene explicar esta diferencia
   al usuario o unificar el indicador.
@@ -29,7 +31,6 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
 ## Reproducibilidad
 
 - El DEM de entrada vive fuera del repositorio y falta documentar una fuente de descarga reproducible.
-- `satellite-texture.jpg` se consume pero su proceso de generación no está automatizado ni documentado.
 - No existe `requirements.txt` con versiones fijadas para el canal Python.
 
 ## Frontend
@@ -40,6 +41,15 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
   se validan mediante navegador y no forman parte del workflow de GitHub Actions.
 - `terrain-data.js` sigue exponiendo un global porque es una salida generada. Migrarlo a módulo
   requeriría coordinar el script Python y la carga inicial.
+
+## Resuelto al ampliar a 500 m
+
+- La generación de `satellite-texture.jpg` dejó de ser un paso manual sin documentar: la produce
+  [`scripts/build_satellite_texture.py`](../../scripts/build_satellite_texture.py).
+- El polígono, la zona de influencia y el submuestreo dejaron de estar duplicados entre scripts:
+  viven en [`scripts/terrain_grid.py`](../../scripts/terrain_grid.py).
+- La leyenda y el resumen de la cabecera se llenan desde el payload, así que no pueden volver a
+  desincronizarse del modelo publicado.
 
 ## Resuelto con las herramientas de análisis
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Modelo 3D interactivo del terreno, generado a partir del DEM SRTMGL1 incluido en el producto ALOS PALSAR RTC.">
+  <meta name="description" content="Modelo 3D interactivo del terreno y su zona de influencia de 500 m, generado a partir del DEM SRTMGL1 incluido en el producto ALOS PALSAR RTC.">
   <meta name="theme-color" content="#015059">
   <title>Modelo 3D de Elevación | Gestiagro</title>
   <link rel="icon" type="image/png" href="./assets/logo-gestiagro.png">
@@ -27,7 +27,7 @@
         </div>
       </div>
       <div class="summary" aria-label="Resumen del modelo">
-        <span><strong>0-54 m.s.n.m.</strong> elevación</span>
+        <span><strong id="summary-elevation">—</strong> elevación</span>
         <span><strong>30 m</strong> resolución</span>
         <span><strong>10 m</strong> curvas</span>
       </div>
@@ -65,7 +65,7 @@
           <div id="satellite-legend" class="map-legend">
             <p class="map-legend-title">Área de estudio</p>
             <span><i class="legend-line boundary-line"></i>Levantamiento preliminar</span>
-            <span><i class="legend-line buffer-line"></i>Zona de influencia · 200 m</span>
+            <span><i class="legend-line buffer-line"></i><span id="legend-buffer">Zona de influencia</span></span>
           </div>
           <div id="tool-instruction" class="tool-instruction" hidden></div>
           <section id="profile-panel" class="result-panel" aria-label="Perfil topográfico" hidden>

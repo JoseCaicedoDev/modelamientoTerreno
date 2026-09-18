@@ -73,6 +73,8 @@ const elements = Object.freeze({
   layersError: byId('layers-error'),
   resetCamera: byId('reset-camera'),
   touchHint: byId('touch-hint'),
+  summaryElevation: byId('summary-elevation'),
+  legendBuffer: byId('legend-buffer'),
   colorButtons: [...document.querySelectorAll('[data-color-mode]')]
 });
 
@@ -98,6 +100,12 @@ function startApplication() {
   let contoursVisible = true;
   let cursorClearTimer;
   let lastCursorKey;
+
+  // El resumen y la leyenda se llenan desde el payload para que nunca se desincronicen
+  // del modelo publicado.
+  elements.summaryElevation.textContent =
+    `${Math.round(data.actualMinElevation)} a ${Math.round(data.actualMaxElevation)} m.s.n.m.`;
+  elements.legendBuffer.textContent = `Zona de influencia · ${data.bufferMeters} m`;
 
   // Anillo de la zona de influencia en UTM: define hasta dónde llega el plano de agua del 3D.
   const waterRing = data.buffer.map(([latitude, longitude]) => {

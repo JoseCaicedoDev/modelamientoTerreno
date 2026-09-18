@@ -1,6 +1,6 @@
 # Modelo 3D de elevación — Gestiagro
 
-Visor web interactivo del DEM recortado al polígono de estudio y su zona de influencia de 200 m.
+Visor web interactivo del DEM recortado al polígono de estudio y su zona de influencia de 500 m.
 
 Incluye:
 

@@ -12,8 +12,11 @@ Publicado en <https://jose.caicedo.dev/modelamientoTerreno/>.
 ## Arquitectura en tres piezas
 
 **1. Preparación de datos (fuera de línea).** [`scripts/build_terrain_data.py`](../../scripts/build_terrain_data.py)
-lee el DEM del producto ALOS PALSAR, que vive *fuera* del repositorio, recorta al área de estudio,
-submuestrea y escribe la malla como un único objeto JSON embebido en `dist/terrain-data.js`. Se ejecuta a mano; no forma parte del despliegue.
+lee el DEM del producto ALOS PALSAR, que vive *fuera* del repositorio, recorta a la zona de
+influencia, submuestrea y escribe la malla como un único objeto JSON embebido en
+`dist/terrain-data.js`. [`scripts/build_satellite_texture.py`](../../scripts/build_satellite_texture.py)
+produce antes la textura satelital, y ambos comparten la definición del área en
+[`scripts/terrain_grid.py`](../../scripts/terrain_grid.py). Se ejecuta a mano; no forma parte del despliegue.
 Ver [Canal de datos](canal-de-datos.md).
 
 **2. Datos publicados.** [`dist/terrain-data.js`](../../dist/terrain-data.js) define
