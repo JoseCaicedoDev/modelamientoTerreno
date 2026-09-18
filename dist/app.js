@@ -131,17 +131,21 @@
   const satelliteMesh = buildSatelliteMesh();
   const synchronizedMarker = {
     type: 'scatter3d',
-    mode: 'markers',
+    mode: 'lines+markers',
     x: [],
     y: [],
     z: [],
     hoverinfo: 'skip',
     showlegend: false,
+    line: {
+      color: '#00f5d4',
+      width: 7
+    },
     marker: {
-      size: 6,
-      color: '#00cba9',
-      symbol: 'diamond',
-      line: { color: '#ffffff', width: 2 },
+      size: [6, 14],
+      color: ['#00cba9', '#ffffff'],
+      symbol: ['circle', 'diamond'],
+      line: { color: '#015059', width: 4 },
       opacity: 1
     }
   };
@@ -244,9 +248,9 @@
     lastCursorKey = cursorKey;
 
     Plotly.restyle(plot, {
-      x: [[point.x]],
-      y: [[point.y]],
-      z: [[point.z + 0.8]]
+      x: [[point.x, point.x]],
+      y: [[point.y, point.y]],
+      z: [[point.z + 0.5, point.z + 8]]
     }, [2]);
 
     const [longitude, latitude] = proj4(utm20n, 'EPSG:4326', [point.x, point.y]);
