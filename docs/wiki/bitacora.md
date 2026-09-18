@@ -2,6 +2,18 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Capas KML y KMZ del usuario
+
+Carga de archivos propios sobre la imagen satelital, con botón y arrastrar y soltar. El KML se
+interpreta con `DOMParser` y se convierte a GeoJSON
+([`domain/kml.js`](../../dist/js/domain/kml.js)); el KMZ se descomprime leyendo el ZIP a mano y
+usando `DecompressionStream`, sin añadir dependencias
+([`domain/kmz.js`](../../dist/js/domain/kmz.js)).
+
+El panel lista las capas con mostrar u ocultar, encuadrar y quitar. Ajustes de móvil: panel de
+resultados por encima de los controles de Leaflet, botones de herramienta de 38 px y rótulo del
+panel satelital oculto. → [Herramientas de análisis](herramientas-analisis.md)
+
 ## 2026-09-18 — Drenaje y zonas de encharcamiento
 
 Análisis hidrológico en el navegador: relleno de depresiones con Priority-Flood, direcciones de

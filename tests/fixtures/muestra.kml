@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Lote de prueba</name>
+    <Style id="s"><LineStyle><color>ff00ffaa</color></LineStyle></Style>
+    <Placemark>
+      <name>Casa</name>
+      <description><![CDATA[<b>Punto</b> con HTML]]></description>
+      <Point><coordinates>-63.4400,8.2150,0</coordinates></Point>
+    </Placemark>
+    <Placemark>
+      <name>Camino</name>
+      <LineString><coordinates>-63.4450,8.2200,0 -63.4350,8.2180,0 -63.4300,8.2120,0</coordinates></LineString>
+    </Placemark>
+    <Placemark>
+      <name>Parcela</name>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>
+        -63.4440,8.2230,0 -63.4330,8.2225,0 -63.4335,8.2130,0 -63.4435,8.2135,0 -63.4440,8.2230,0
+      </coordinates></LinearRing></outerBoundaryIs></Polygon>
+    </Placemark>
+  </Document>
+</kml>

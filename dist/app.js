@@ -12,12 +12,15 @@ import { createGrid } from './js/domain/grid.js';
 import { measurePath } from './js/domain/measure.js';
 import { createFloodModel } from './js/domain/flood.js';
 import { createHydrologyModel } from './js/domain/hydrology.js';
+import { parseKml } from './js/domain/kml.js';
+import { extractKmlFromKmz, looksLikeZip } from './js/domain/kmz.js';
 import { packColor } from './js/adapters/raster-overlay.js';
 import { createTerrainPlot } from './js/adapters/terrain-plot.js';
 import { createSatelliteMap } from './js/adapters/satellite-map.js';
 import { createProfileChart } from './js/ui/profile-chart.js';
 import { createToolController } from './js/ui/tool-controller.js';
 import { createResultPanel } from './js/ui/result-panel.js';
+import { createLayersPanel } from './js/ui/layers-panel.js';
 
 const byId = id => document.getElementById(id);
 
@@ -60,6 +63,14 @@ const elements = Object.freeze({
   drainageThresholdValue: byId('drainage-threshold-value'),
   drainageDepth: byId('drainage-depth'),
   drainageDepthValue: byId('drainage-depth-value'),
+  layersTool: byId('layers-tool'),
+  layersPanel: byId('layers-panel'),
+  layersClose: byId('layers-close'),
+  layersAdd: byId('layers-add'),
+  layersInput: byId('layers-input'),
+  layersList: byId('layers-list'),
+  layersEmpty: byId('layers-empty'),
+  layersError: byId('layers-error'),
   resetCamera: byId('reset-camera'),
   touchHint: byId('touch-hint'),
   colorButtons: [...document.querySelectorAll('[data-color-mode]')]
@@ -375,6 +386,96 @@ function startApplication() {
     });
   });
   elements.drainagePanel.addEventListener('click', event => event.stopPropagation());
+
+  const layersPanel = createResultPanel({
+    panel: elements.layersPanel,
+    pane: elements.satellitePane,
+    visibleClass: 'panel-visible',
+    closeButton: elements.layersClose,
+    onClose: () => tools.deactivateAll()
+  });
+
+  const layersList = createLayersPanel({
+    list: elements.layersList,
+    empty: elements.layersEmpty,
+    onToggle: (id, visible) => satelliteMap.setUserLayerVisible(id, visible),
+    onZoom: id => satelliteMap.zoomToUserLayer(id),
+    onRemove: id => satelliteMap.removeUserLayer(id)
+  });
+
+  function showLayerError(message) {
+    elements.layersError.textContent = message || '';
+    elements.layersError.hidden = !message;
+  }
+
+  function contarElementos(geojson) {
+    return geojson.features.length;
+  }
+
+  async function leerCapa(file) {
+    if (file.name.toLowerCase().endsWith('.kmz')) {
+      const buffer = await file.arrayBuffer();
+      if (!looksLikeZip(buffer)) throw new Error(`${file.name} no parece un archivo KMZ`);
+      return parseKml(await extractKmlFromKmz(buffer));
+    }
+    return parseKml(await file.text());
+  }
+
+  async function cargarCapas(files) {
+    tools.activate('capas');
+    showLayerError(null);
+    for (const file of files) {
+      try {
+        const { geojson, nombre } = await leerCapa(file);
+        if (!geojson.features.length) {
+          showLayerError(`${file.name} no contiene geometrías que se puedan dibujar`);
+          continue;
+        }
+        const id = satelliteMap.addUserLayer(geojson);
+        layersList.add({ id, nombre: nombre || file.name, elementos: contarElementos(geojson) });
+        satelliteMap.zoomToUserLayer(id);
+      } catch (error) {
+        console.error('No se pudo cargar la capa', file.name, error);
+        showLayerError(error.message || `No se pudo leer ${file.name}`);
+      }
+    }
+  }
+
+  tools.register('capas', {
+    button: elements.layersTool,
+    activate: () => layersPanel.show(),
+    deactivate: () => {
+      layersPanel.hide();
+      showLayerError(null);
+    }
+  });
+
+  elements.layersTool.addEventListener('click', () => tools.toggle('capas'));
+  elements.layersAdd.addEventListener('click', () => elements.layersInput.click());
+  elements.layersInput.addEventListener('change', () => {
+    cargarCapas([...elements.layersInput.files]);
+    elements.layersInput.value = '';
+  });
+  elements.layersPanel.addEventListener('click', event => event.stopPropagation());
+
+  // Arrastrar y soltar sobre el panel satelital.
+  ['dragenter', 'dragover'].forEach(type => {
+    elements.satellitePane.addEventListener(type, event => {
+      if (!event.dataTransfer?.types.includes('Files')) return;
+      event.preventDefault();
+      elements.satellitePane.classList.add('drop-target');
+    });
+  });
+  elements.satellitePane.addEventListener('dragleave', event => {
+    if (event.target !== elements.satellitePane) return;
+    elements.satellitePane.classList.remove('drop-target');
+  });
+  elements.satellitePane.addEventListener('drop', event => {
+    if (!event.dataTransfer?.files.length) return;
+    event.preventDefault();
+    elements.satellitePane.classList.remove('drop-target');
+    cargarCapas([...event.dataTransfer.files]);
+  });
 
   function renderProfile(start, end) {
     const profile = terrain.sampleLine(start, end);

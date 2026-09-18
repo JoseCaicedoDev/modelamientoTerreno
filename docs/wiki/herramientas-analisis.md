@@ -14,6 +14,7 @@ Los botones viven en `.pane-tools`, arriba a la izquierda del panel satelital
 | Medición de distancias y áreas | [`domain/measure.js`](../../dist/js/domain/measure.js) | Implementada |
 | Simulación de nivel de agua | [`domain/flood.js`](../../dist/js/domain/flood.js) | Implementada |
 | Drenaje y encharcamiento | [`domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Implementada |
+| Capas KML y KMZ del usuario | [`domain/kml.js`](../../dist/js/domain/kml.js), [`domain/kmz.js`](../../dist/js/domain/kmz.js) | Implementada |
 
 ## Perfil topográfico
 
@@ -158,3 +159,44 @@ un levantamiento hidráulico; el panel lo advierte.
 DEM original, que una depresión cerrada se llena hasta su nivel de desborde, que el flujo desciende
 por la ladera y se acumula en la salida, la conversión de hectáreas a celdas y el efecto del umbral
 de profundidad.
+
+## Capas KML y KMZ del usuario
+
+Permite superponer sobre la imagen satelital los archivos que ya tiene la persona usuaria:
+linderos, recorridos o puntos exportados de Google Earth o QGIS. Se cargan con el botón del panel
+o **arrastrando el archivo sobre el panel satelital**.
+
+### Lectura del archivo
+
+- **KML**: [`domain/kml.js`](../../dist/js/domain/kml.js) lo interpreta con `DOMParser` y lo
+  convierte a GeoJSON, que es lo que consume `L.geoJSON`. Cubre `Folder`, `Placemark`, `name`,
+  `description`, `Point`, `LineString`, `LinearRing`, `Polygon` con `innerBoundaryIs` y
+  `MultiGeometry`, además del color `aabbggrr` de `LineStyle` y `PolyStyle`.
+- **KMZ**: [`domain/kmz.js`](../../dist/js/domain/kmz.js) lee el directorio central del ZIP a mano
+  y descomprime el primer `.kml` con `DecompressionStream('deflate-raw')`, que ya trae el
+  navegador. **No se añadió ninguna dependencia** para soportar el formato.
+
+Ninguna descripción del KML se inserta como HTML: se escribe con `textContent` en el globo de
+Leaflet, porque esos textos vienen en CDATA y son contenido ajeno.
+
+### Panel de capas
+
+[`ui/layers-panel.js`](../../dist/js/ui/layers-panel.js) lista cada archivo cargado con su nombre,
+el número de elementos y tres acciones: mostrar u ocultar, encuadrar el mapa sobre la capa y
+quitarla. Al cargar una capa el mapa se encuadra automáticamente sobre ella.
+
+Las capas **viven solo en la sesión**: no hay servidor donde guardarlas, así que al recargar la
+página desaparecen. El panel lo advierte.
+
+### Límites conocidos
+
+No se admiten `NetworkLink`, `gx:Track`, `Model`, `StyleMap` ni iconos remotos. Si el navegador no
+expone `DecompressionStream`, el KMZ se rechaza con un mensaje que pide el `.kml` descomprimido.
+Un KMZ sin ningún `.kml` dentro también se rechaza con un aviso.
+
+### Pruebas
+
+[`tests/kml.test.mjs`](../../tests/kml.test.mjs) cubre la lectura de coordenadas, la conversión de
+color, el reconocimiento de la firma ZIP y la extracción del KML comprimido usando los archivos de
+[`tests/fixtures/`](../../tests/fixtures). El parseo del documento se verifica en navegador, porque
+`DOMParser` no existe en Node.

@@ -50,6 +50,9 @@
             <button id="measure-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Medir distancias y áreas" data-tooltip="Medir distancias y áreas">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 15 6-6 6 6-6 6-6-6Z"/><path d="M13 5h8v8"/><path d="m21 5-7 7"/></svg>
             </button>
+            <button id="layers-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Cargar capas KML o KMZ" data-tooltip="Capas KML">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
+            </button>
             <button id="drainage-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Analizar drenaje y encharcamiento" data-tooltip="Drenaje y encharcamiento">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c-1.5 3-5 5.5-5 9a5 5 0 0 0 10 0c0-3.5-3.5-6-5-9Z"/><path d="M4 20h16"/></svg>
             </button>
@@ -75,6 +78,21 @@
             </header>
             <svg id="profile-chart" class="profile-chart" viewBox="0 0 640 210" role="img" aria-label="Gráfico del perfil topográfico"></svg>
             <div id="profile-stats" class="result-stats"></div>
+          </section>
+
+          <section id="layers-panel" class="result-panel" aria-label="Capas del usuario" hidden>
+            <header class="result-header">
+              <div>
+                <span class="result-overline">CAPAS DEL USUARIO</span>
+                <h2>Archivos KML y KMZ</h2>
+              </div>
+              <button id="layers-close" class="result-close" type="button" aria-label="Cerrar capas del usuario">×</button>
+            </header>
+            <button id="layers-add" class="panel-button" type="button">Cargar archivo KML o KMZ</button>
+            <input id="layers-input" type="file" accept=".kml,.kmz" multiple hidden>
+            <ul id="layers-list" class="layers-list"></ul>
+            <p id="layers-empty" class="result-note">Arrastra un archivo <code>.kml</code> o <code>.kmz</code> sobre el mapa, o usa el botón. Las capas viven solo en esta sesión.</p>
+            <p id="layers-error" class="result-note result-error" hidden></p>
           </section>
 
           <section id="drainage-panel" class="result-panel" aria-label="Drenaje y encharcamiento" hidden>

@@ -36,12 +36,15 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/domain/measure.js`](../../dist/js/domain/measure.js) | Medición de recorridos y polígonos: longitud drapeada, área proyectada y área real |
 | [`dist/js/domain/flood.js`](../../dist/js/domain/flood.js) | Inundación por cota: área, volumen y máscara, con modo conectado |
 | [`dist/js/domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Relleno de depresiones, direcciones D8, acumulación, cauces y encharcamiento |
+| [`dist/js/domain/kml.js`](../../dist/js/domain/kml.js) | Lectura de KML y conversión a GeoJSON |
+| [`dist/js/domain/kmz.js`](../../dist/js/domain/kmz.js) | Extracción del KML dentro de un KMZ leyendo el ZIP |
 | [`dist/js/adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js) | Trazas, escena y operaciones Plotly |
 | [`dist/js/adapters/satellite-map.js`](../../dist/js/adapters/satellite-map.js) | Capas Leaflet, marcador sincronizado, dibujo genérico y capas del usuario |
 | [`dist/js/adapters/raster-overlay.js`](../../dist/js/adapters/raster-overlay.js) | Capa canvas propia para pintar rásteres derivados de la malla |
 | [`dist/js/ui/profile-chart.js`](../../dist/js/ui/profile-chart.js) | Representación SVG y estadísticas del perfil topográfico |
 | [`dist/js/ui/tool-controller.js`](../../dist/js/ui/tool-controller.js) | Herramienta activa exclusiva y estado de sus botones |
 | [`dist/js/ui/result-panel.js`](../../dist/js/ui/result-panel.js) | Mostrar, ocultar y llenar los paneles de resultados |
+| [`dist/js/ui/layers-panel.js`](../../dist/js/ui/layers-panel.js) | Lista de capas del usuario con mostrar, encuadrar y quitar |
 
 ## Infraestructura compartida por las herramientas
 
