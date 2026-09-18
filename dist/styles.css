@@ -183,7 +183,7 @@ h1 {
   position: absolute;
   z-index: 850;
   top: 18px;
-  right: 18px;
+  left: 18px;
   padding: 7px 11px;
   border: 1px solid var(--panel-border);
   border-radius: 999px;
@@ -197,7 +197,6 @@ h1 {
 }
 
 .satellite-pane .pane-heading {
-  right: auto;
   left: 18px;
 }
 
@@ -596,7 +595,7 @@ input[type="range"] {
     border-bottom: 1px solid var(--gray-700);
   }
 
-  .pane-heading { top: 10px; right: 10px; }
+  .pane-heading { top: 10px; left: 10px; }
   .satellite-pane .pane-heading { right: 10px; left: auto; }
 
   .coordinate-readout {
