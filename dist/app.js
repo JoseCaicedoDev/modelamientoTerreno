@@ -143,9 +143,9 @@
     },
     marker: {
       size: [6, 14],
-      color: ['#00cba9', '#ffffff'],
+      color: ['#00cba9', '#00cba9'],
       symbol: ['circle', 'diamond'],
-      line: { color: '#015059', width: 4 },
+      line: { color: '#ffffff', width: 3 },
       opacity: 1
     }
   };
