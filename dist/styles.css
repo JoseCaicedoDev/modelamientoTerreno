@@ -200,6 +200,13 @@ h1 {
   left: 18px;
 }
 
+.satellite-profile-tool {
+  position: absolute;
+  z-index: 900;
+  top: 58px;
+  left: 18px;
+}
+
 .coordinate-readout {
   position: absolute;
   z-index: 900;
@@ -722,6 +729,7 @@ input[type="range"] {
 
   .pane-heading { top: 10px; left: 10px; }
   .satellite-pane .pane-heading { right: 10px; left: auto; }
+  .satellite-profile-tool { top: 10px; left: 10px; }
 
   .coordinate-readout {
     max-width: calc(100% - 20px);

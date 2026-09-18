@@ -43,6 +43,9 @@
         </section>
         <section class="view-pane satellite-pane" aria-label="Imagen satelital">
           <span class="pane-heading">Imagen satelital</span>
+          <button id="profile-tool" class="tool-button satellite-profile-tool" type="button" aria-pressed="false" aria-label="Generar perfil topográfico" data-tooltip="Perfil topográfico">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18"/><path d="m4 15 4-5 3 3 4-7 5 9"/><circle cx="4" cy="15" r="1"/><circle cx="20" cy="15" r="1"/></svg>
+          </button>
           <div id="satellite-map" role="region" aria-label="Imagen satelital del área de estudio"></div>
           <div id="map-coordinate" class="coordinate-readout" hidden></div>
           <div id="satellite-legend" class="map-legend">
@@ -84,9 +87,6 @@
         </div>
         <button id="contours-toggle" class="tool-button active" type="button" aria-pressed="true" aria-label="Mostrar u ocultar curvas de nivel" data-tooltip="Curvas 10 m">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7c3-3 5 3 8 0s5 3 10 0M3 12c3-3 5 3 8 0s5 3 10 0M3 17c3-3 5 3 8 0s5 3 10 0"/></svg>
-        </button>
-        <button id="profile-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Generar perfil topográfico" data-tooltip="Perfil topográfico">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18"/><path d="m4 15 4-5 3 3 4-7 5 9"/><circle cx="4" cy="15" r="1"/><circle cx="20" cy="15" r="1"/></svg>
         </button>
         <button id="reset-camera" class="tool-button" type="button" aria-label="Restablecer vista 3D" data-tooltip="Restablecer vista">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a8 8 0 1 1 2.3 6.2"/><path d="M4 5v6h6"/><path d="m9 15 3-3 3 3"/></svg>
