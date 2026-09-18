@@ -484,55 +484,83 @@ input[type="range"] {
 /* Escritorio: encabezado compacto sin perder información. */
 @media (min-width: 901px) {
   .topbar {
-    min-height: 62px;
-    height: 62px;
-    gap: 20px;
+    min-height: 66px;
+    height: 66px;
+    gap: 16px;
     padding: 3px clamp(20px, 2.5vw, 40px);
   }
 
+  .brand-lockup { flex: 1 1 auto; }
+
   .brand-logo {
-    width: 58px;
-    height: 58px;
-    flex-basis: 58px;
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
   }
 
-  .brand-content { padding-left: 5px; }
+  .brand-content {
+    display: grid;
+    grid-template-columns: max-content minmax(280px, max-content);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: clamp(16px, 2vw, 30px);
+    padding-left: 8px;
+  }
 
   .brand-name {
-    font-size: 10px;
-    line-height: 1;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    font-size: 11px;
+    line-height: 1.15;
   }
 
   .brand-descriptor {
-    margin-top: 1px;
-    font-size: 8px;
-    line-height: 1.05;
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    margin-top: 2px;
+    font-size: 9px;
+    line-height: 1.15;
+    white-space: nowrap;
   }
 
   .title-line {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
     gap: 8px;
-    margin-top: 3px;
+    margin-top: 0;
   }
 
   .context-badge {
-    padding: 3px 7px;
-    font-size: 8px;
-  }
-
-  h1 { font-size: clamp(19px, 1.65vw, 24px); }
-
-  .crs-label {
-    margin-top: 2px;
-    font-size: 7px;
-    line-height: 1;
-  }
-
-  .summary {
-    gap: 6px;
+    padding: 3px 8px;
     font-size: 9px;
   }
 
-  .summary span { padding: 5px 9px; }
+  h1 {
+    font-size: clamp(19px, 1.55vw, 23px);
+    white-space: nowrap;
+  }
+
+  .crs-label {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    margin-top: 3px;
+    font-size: 9px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .summary {
+    flex: 0 0 auto;
+    gap: 6px;
+    flex-wrap: nowrap;
+    font-size: 10px;
+  }
+
+  .summary span { padding: 6px 9px; }
 }
 
 @media (max-width: 900px) {
