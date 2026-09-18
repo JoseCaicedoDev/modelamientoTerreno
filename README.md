@@ -10,3 +10,7 @@ Incluye:
 - Rotación, inclinación y acercamiento interactivos.
 
 El contenido publicado se encuentra en `dist/` y se despliega automáticamente con GitHub Pages.
+
+## Ver en línea
+
+[Abrir el modelo 3D](https://josecaicedodev.github.io/modelamientoTerreno/)
