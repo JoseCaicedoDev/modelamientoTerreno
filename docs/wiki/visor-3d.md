@@ -41,7 +41,7 @@ El texto de atribución al pie cambia con el modo vía `updateSourceLabel`.
 | --- | --- |
 | Vista (Modelo 3D / Satélite) | `setViewMode` — alterna Plotly ↔ Leaflet, oculta los controles `.terrain-only` |
 | Coloración (Elevación / Satélite) | `setColorMode` |
-| Exageración vertical (1–10) | `scene.aspectratio.z = 0.055 × valor`, por `Plotly.relayout` |
+| Exageración vertical (1–10, por defecto **2×**) | `scene.aspectratio.z = 0.055 × valor`, por `Plotly.relayout` |
 | Curvas 10 m | `contours.z.show` y su proyección sobre la base |
 | Restablecer vista | Devuelve `scene.camera` al objeto `camera` inicial |
 
@@ -52,7 +52,7 @@ Las curvas van de 0 a 60 m cada 10 m, proyectadas también sobre el plano inferi
 
 Posición inicial `eye: {1.34, -1.5, 0.78}`, mirando ligeramente por debajo del centro
 (`center.z: -0.08`): una vista desde el sureste. `aspectmode: 'manual'` con `x: 1`,
-`y: data.aspectY` y `z` según el deslizador; sin esto Plotly normalizaría los ejes y el relieve
+`y: data.aspectY` y `z` según el deslizador (0,11 con el valor inicial de 2×); sin esto Plotly normalizaría los ejes y el relieve
 aparecería deformado. El eje Z se fija a `[-2, 58]`, derivado de `minElevation`/`maxElevation`.
 
 Los tooltips muestran Este/Norte UTM y elevación con `hovertemplate`, idénticos en ambas trazas.

@@ -2,6 +2,11 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## Sin commitear — Exageración vertical por defecto de 2×
+
+El deslizador arranca en 2× en lugar de 5× (`value` y `<output>` en `index.html`); el relieve se
+muestra más cercano a la escala real al abrir. → [Visor 3D](visor-3d.md)
+
 ## Sin commitear — Botón de volver al área de estudio
 
 Control Leaflet propio bajo el zoom que reencuadra el mapa sobre la zona de influencia, con la

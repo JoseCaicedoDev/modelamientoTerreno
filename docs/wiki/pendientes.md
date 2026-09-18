@@ -28,7 +28,8 @@ alguien que retome el proyecto debería conocer.
 
 ## Estado del árbol de trabajo
 
-El botón de "volver al área de estudio" (`app.js`, `styles.css`) **está sin commitear**.
+**Sin commitear**: el botón de "volver al área de estudio" (`app.js`, `styles.css`) y la
+exageración vertical por defecto de 2× (`index.html`).
 
 ## Frontend
 
