@@ -81,12 +81,12 @@ for row_z, row_s, row_mask in zip(z, shade, inside):
     z_out.append([round(float(v), 1) if keep else None for v, keep in zip(row_z, row_mask)])
     shade_out.append([round(float(v), 1) if keep else None for v, keep in zip(row_s, row_mask)])
 
-x_km = [round(float((x - xs[0]) / 1000), 4) for x in xs]
-y_km = [round(float((y - ys[-1]) / 1000), 4) for y in ys]
+x_utm = [round(float(x), 3) for x in xs]
+y_utm = [round(float(y), 3) for y in ys]
 values = z[inside]
 payload = {
-    "x": x_km,
-    "y": y_km,
+    "x": x_utm,
+    "y": y_utm,
     "z": z_out,
     "hillshade": shade_out,
     "minElevation": 0,
@@ -98,4 +98,4 @@ payload = {
     "source": "SRTMGL1 / ALOS PALSAR RTC ALPSRP274680160"
 }
 OUT.write_text("window.TERRAIN_DATA = " + json.dumps(payload, separators=(",", ":")) + ";\n", encoding="utf-8")
-print(f"{OUT} ({OUT.stat().st_size} bytes, {len(y_km)}x{len(x_km)} cells)")
+print(f"{OUT} ({OUT.stat().st_size} bytes, {len(y_utm)}x{len(x_utm)} cells)")

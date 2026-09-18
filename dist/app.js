@@ -63,7 +63,7 @@
         project: { z: true }
       }
     },
-    hovertemplate: 'Este relativo: %{x:.2f} km<br>Norte relativo: %{y:.2f} km<br>Elevación: %{z:.1f} m<extra></extra>'
+    hovertemplate: 'Este UTM: %{x:,.1f} m<br>Norte UTM: %{y:,.1f} m<br>Elevación: %{z:.1f} m<extra></extra>'
   };
 
   const layout = {
@@ -78,13 +78,15 @@
       aspectratio: { x: 1, y: data.aspectY, z: zAspect() },
       bgcolor: '#07151a',
       xaxis: {
-        title: { text: 'Este relativo (km)', font: { color: '#9fb8b4', size: 12 } },
+        title: { text: 'Este UTM (m)', font: { color: '#9fb8b4', size: 12 } },
+        tickformat: ',.0f',
         tickfont: { color: '#79918e', size: 10 },
         gridcolor: 'rgba(159,184,180,0.14)', zerolinecolor: 'rgba(159,184,180,0.24)',
         backgroundcolor: '#0a1a20', showbackground: true, color: '#9fb8b4'
       },
       yaxis: {
-        title: { text: 'Norte relativo (km)', font: { color: '#9fb8b4', size: 12 } },
+        title: { text: 'Norte UTM (m)', font: { color: '#9fb8b4', size: 12 } },
+        tickformat: ',.0f',
         tickfont: { color: '#79918e', size: 10 },
         gridcolor: 'rgba(159,184,180,0.14)', zerolinecolor: 'rgba(159,184,180,0.24)',
         backgroundcolor: '#0a1a20', showbackground: true, color: '#9fb8b4'
