@@ -13,6 +13,7 @@ Los botones viven en `.pane-tools`, arriba a la izquierda del panel satelital
 | Perfil topográfico | [`domain/terrain.js`](../../dist/js/domain/terrain.js) (`sampleLine`) | Implementada |
 | Medición de distancias y áreas | [`domain/measure.js`](../../dist/js/domain/measure.js) | Implementada |
 | Simulación de nivel de agua | [`domain/flood.js`](../../dist/js/domain/flood.js) | Implementada |
+| Drenaje y encharcamiento | [`domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Implementada |
 
 ## Perfil topográfico
 
@@ -106,3 +107,54 @@ tiempo, infiltración ni obras. El panel lo advierte.
 [`tests/flood.test.mjs`](../../tests/flood.test.mjs) comprueba el rango de cotas, el área y el
 volumen de la cota simple, el descarte de una depresión aislada en modo conectado, la inundación
 total con la cota máxima y la ausencia de agua por debajo del mínimo.
+
+## Drenaje y zonas de encharcamiento
+
+Deriva del DEM por dónde corre el agua y dónde se queda. Dibuja los cauces sobre el mapa y sobre el
+modelo 3D, y las zonas de encharcamiento como mancha sobre el mapa.
+
+### Cómo se calcula
+
+[`domain/hydrology.js`](../../dist/js/domain/hydrology.js), en cuatro pasos encadenados que se
+calculan la primera vez que se activa la herramienta y quedan en memoria:
+
+1. **Relleno de depresiones (Priority-Flood)** con un montículo binario propio: se siembra el borde
+   del área y se avanza hacia adentro elevando cada celda al máximo entre su cota y la de su
+   predecesora más un epsilon, que garantiza drenaje incluso en mesetas planas.
+2. **Encharcamiento** = DEM rellenado − DEM original, con umbral ajustable.
+3. **Direcciones de flujo D8** sobre el DEM rellenado: el vecino de mayor pendiente descendente,
+   con distancias de 25 m en cruz y 35,36 m en diagonal.
+4. **Acumulación**: una sola pasada de mayor a menor cota rellenada empujando el aporte de cada
+   celda a su receptor. Sin recursión y sin riesgo de ciclos.
+
+Sobre la malla real (12.883 celdas válidas) los cuatro pasos tardan **unos 20 ms**, muy por debajo
+del límite de 50 ms que se fijó.
+
+### Controles
+
+- **Cuenca mínima del cauce**, en hectáreas de área aportante. Es más comprensible que un número de
+  celdas: `celdas = hectáreas × 10.000 / 625`.
+- **Encharcamiento desde**, la profundidad mínima de la depresión. Por defecto **0,3 m**: por debajo
+  de 0,2 m solo aparece el ruido del suavizado gaussiano y del redondeo a 0,1 m del DEM.
+
+Al arrastrar los deslizadores solo se repinta el ráster del mapa. Los miles de segmentos de la
+traza 3D se redibujan al soltar (`change`), no en cada paso.
+
+### Resultados sobre el área de estudio
+
+Con cuenca mínima de 5 ha y encharcamiento desde 0,3 m: **21,47 km de cauces** en 743 celdas y
+**106,13 ha encharcadas**, con una profundidad máxima de depresión de 9,1 m. El DEM rellenado nunca
+queda por debajo del original en ninguna de las 12.883 celdas.
+
+### Límites
+
+Resultado **indicativo**. El DEM es SRTM de 30 m remuestreado a 25 m y suavizado, de modo que los
+cauces están generalizados y las depresiones pueden ser artefactos del propio modelo. No sustituye
+un levantamiento hidráulico; el panel lo advierte.
+
+### Pruebas
+
+[`tests/hydrology.test.mjs`](../../tests/hydrology.test.mjs) comprueba que el relleno nunca baja del
+DEM original, que una depresión cerrada se llena hasta su nivel de desborde, que el flujo desciende
+por la ladera y se acumula en la salida, la conversión de hectáreas a celdas y el efecto del umbral
+de profundidad.

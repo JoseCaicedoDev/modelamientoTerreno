@@ -35,6 +35,7 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/domain/geometry.js`](../../dist/js/domain/geometry.js) | Longitudes, áreas, punto en polígono, factor de drapeado y triangulación en abanico |
 | [`dist/js/domain/measure.js`](../../dist/js/domain/measure.js) | Medición de recorridos y polígonos: longitud drapeada, área proyectada y área real |
 | [`dist/js/domain/flood.js`](../../dist/js/domain/flood.js) | Inundación por cota: área, volumen y máscara, con modo conectado |
+| [`dist/js/domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Relleno de depresiones, direcciones D8, acumulación, cauces y encharcamiento |
 | [`dist/js/adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js) | Trazas, escena y operaciones Plotly |
 | [`dist/js/adapters/satellite-map.js`](../../dist/js/adapters/satellite-map.js) | Capas Leaflet, marcador sincronizado, dibujo genérico y capas del usuario |
 | [`dist/js/adapters/raster-overlay.js`](../../dist/js/adapters/raster-overlay.js) | Capa canvas propia para pintar rásteres derivados de la malla |

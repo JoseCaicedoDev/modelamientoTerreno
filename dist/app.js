@@ -11,6 +11,7 @@ import { createTerrainModel } from './js/domain/terrain.js';
 import { createGrid } from './js/domain/grid.js';
 import { measurePath } from './js/domain/measure.js';
 import { createFloodModel } from './js/domain/flood.js';
+import { createHydrologyModel } from './js/domain/hydrology.js';
 import { packColor } from './js/adapters/raster-overlay.js';
 import { createTerrainPlot } from './js/adapters/terrain-plot.js';
 import { createSatelliteMap } from './js/adapters/satellite-map.js';
@@ -51,6 +52,14 @@ const elements = Object.freeze({
   floodLevel: byId('flood-level'),
   floodLevelValue: byId('flood-level-value'),
   floodConnected: byId('flood-connected'),
+  drainageTool: byId('drainage-tool'),
+  drainagePanel: byId('drainage-panel'),
+  drainageStats: byId('drainage-stats'),
+  drainageClose: byId('drainage-close'),
+  drainageThreshold: byId('drainage-threshold'),
+  drainageThresholdValue: byId('drainage-threshold-value'),
+  drainageDepth: byId('drainage-depth'),
+  drainageDepthValue: byId('drainage-depth-value'),
   resetCamera: byId('reset-camera'),
   touchHint: byId('touch-hint'),
   colorButtons: [...document.querySelectorAll('[data-color-mode]')]
@@ -283,6 +292,90 @@ function startApplication() {
   });
   elements.floodPanel.addEventListener('click', event => event.stopPropagation());
 
+  const drainagePanel = createResultPanel({
+    panel: elements.drainagePanel,
+    stats: elements.drainageStats,
+    pane: elements.satellitePane,
+    visibleClass: 'panel-visible',
+    closeButton: elements.drainageClose,
+    onClose: () => tools.deactivateAll()
+  });
+
+  const hydrology = createHydrologyModel(grid);
+  let drainageRaster = null;
+  let drainageFrame = 0;
+
+  const PONDING_COLOR = [3, 150, 166];
+  const STREAM_COLOR = [56, 189, 248];
+
+  function drainageColors(encharcamiento, cauces, profundidadMinima) {
+    const colors = new Uint32Array(grid.cellCount);
+    const maximo = Math.max(profundidadMinima * 3, 1);
+    encharcamiento.cells.forEach(index => {
+      const intensidad = Math.min(1, encharcamiento.depth[index] / maximo);
+      colors[index] = packColor(
+        PONDING_COLOR[0],
+        PONDING_COLOR[1],
+        PONDING_COLOR[2],
+        Math.round(90 + 120 * intensidad)
+      );
+    });
+    // Los cauces se pintan encima del encharcamiento.
+    cauces.cells.forEach(index => {
+      colors[index] = packColor(STREAM_COLOR[0], STREAM_COLOR[1], STREAM_COLOR[2], 235);
+    });
+    return colors;
+  }
+
+  function updateDrainage({ conTrazas3D = false } = {}) {
+    const hectareas = Number(elements.drainageThreshold.value);
+    const profundidad = Number(elements.drainageDepth.value);
+    elements.drainageThresholdValue.textContent = `${hectareas} ha`;
+    elements.drainageDepthValue.textContent = formatElevation(profundidad);
+
+    const cauces = hydrology.streamSegments(hectareas);
+    const encharcamiento = hydrology.ponding(profundidad);
+
+    window.cancelAnimationFrame(drainageFrame);
+    drainageFrame = window.requestAnimationFrame(() => {
+      if (!drainageRaster) drainageRaster = satelliteMap.createRaster({ grid, opacity: 0.8, className: 'drainage-raster' });
+      drainageRaster.show();
+      drainageRaster.render(drainageColors(encharcamiento, cauces, profundidad));
+    });
+
+    // Redibujar miles de segmentos en la escena 3D solo al soltar el deslizador.
+    if (conTrazas3D) terrainPlot.setStreams(cauces);
+
+    drainagePanel.setStats([
+      ['Longitud de cauces', formatDistance(cauces.length)],
+      ['Área encharcada', formatArea(encharcamiento.area)],
+      ['Profundidad máxima', formatElevation(hydrology.compute().maximumDepth)],
+      ['Celdas con cauce', String(cauces.cells.length)]
+    ]);
+    drainagePanel.show();
+  }
+
+  tools.register('drenaje', {
+    button: elements.drainageTool,
+    activate: () => updateDrainage({ conTrazas3D: true }),
+    deactivate: () => {
+      drainageRaster?.hide();
+      terrainPlot.setStreams(null);
+      drainagePanel.hide();
+    }
+  });
+
+  elements.drainageTool.addEventListener('click', () => tools.toggle('drenaje'));
+  [elements.drainageThreshold, elements.drainageDepth].forEach(control => {
+    control.addEventListener('input', () => {
+      if (tools.isActive('drenaje')) updateDrainage();
+    });
+    control.addEventListener('change', () => {
+      if (tools.isActive('drenaje')) updateDrainage({ conTrazas3D: true });
+    });
+  });
+  elements.drainagePanel.addEventListener('click', event => event.stopPropagation());
+
   function renderProfile(start, end) {
     const profile = terrain.sampleLine(start, end);
     if (!profileChart.render(profile)) return;
@@ -379,6 +472,12 @@ function startApplication() {
 
     const herramienta = parameters.get('herramienta');
     if (!herramienta) return;
+    if (herramienta === 'drenaje') {
+      const umbral = Number(parameters.get('umbral'));
+      if (parameters.has('umbral') && Number.isFinite(umbral)) elements.drainageThreshold.value = String(umbral);
+      const profundidad = Number(parameters.get('profundidad'));
+      if (parameters.has('profundidad') && Number.isFinite(profundidad)) elements.drainageDepth.value = String(profundidad);
+    }
     if (herramienta === 'inundacion') {
       prepareFloodSlider();
       const cota = Number(parameters.get('cota'));

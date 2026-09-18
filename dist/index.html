@@ -50,6 +50,9 @@
             <button id="measure-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Medir distancias y áreas" data-tooltip="Medir distancias y áreas">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 15 6-6 6 6-6 6-6-6Z"/><path d="M13 5h8v8"/><path d="m21 5-7 7"/></svg>
             </button>
+            <button id="drainage-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Analizar drenaje y encharcamiento" data-tooltip="Drenaje y encharcamiento">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c-1.5 3-5 5.5-5 9a5 5 0 0 0 10 0c0-3.5-3.5-6-5-9Z"/><path d="M4 20h16"/></svg>
+            </button>
             <button id="flood-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Simular nivel de agua" data-tooltip="Nivel de agua">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14c2.5-2 4.5 2 7 0s4.5-2 7 0 2.5 0 4-1"/><path d="M3 19c2.5-2 4.5 2 7 0s4.5-2 7 0 2.5 0 4-1"/><path d="M12 3v6"/><path d="m9 6 3 3 3-3"/></svg>
             </button>
@@ -72,6 +75,26 @@
             </header>
             <svg id="profile-chart" class="profile-chart" viewBox="0 0 640 210" role="img" aria-label="Gráfico del perfil topográfico"></svg>
             <div id="profile-stats" class="result-stats"></div>
+          </section>
+
+          <section id="drainage-panel" class="result-panel" aria-label="Drenaje y encharcamiento" hidden>
+            <header class="result-header">
+              <div>
+                <span class="result-overline">ANÁLISIS DEL TERRENO</span>
+                <h2>Drenaje y encharcamiento</h2>
+              </div>
+              <button id="drainage-close" class="result-close" type="button" aria-label="Cerrar análisis de drenaje">×</button>
+            </header>
+            <div class="panel-control">
+              <label for="drainage-threshold">Cuenca mínima del cauce <output id="drainage-threshold-value">5 ha</output></label>
+              <input id="drainage-threshold" type="range" min="1" max="60" step="1" value="5">
+            </div>
+            <div class="panel-control">
+              <label for="drainage-depth">Encharcamiento desde <output id="drainage-depth-value">0,3 m</output></label>
+              <input id="drainage-depth" type="range" min="0.1" max="3" step="0.1" value="0.3">
+            </div>
+            <div id="drainage-stats" class="result-stats"></div>
+            <p class="result-note">Resultado indicativo, derivado de un DEM SRTM de 30 m remuestreado y suavizado. No sustituye un levantamiento hidráulico.</p>
           </section>
 
           <section id="flood-panel" class="result-panel" aria-label="Simulación de nivel de agua" hidden>

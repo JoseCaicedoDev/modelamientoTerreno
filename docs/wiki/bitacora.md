@@ -2,6 +2,17 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Drenaje y zonas de encharcamiento
+
+Análisis hidrológico en el navegador: relleno de depresiones con Priority-Flood, direcciones de
+flujo D8, acumulación y extracción de cauces por umbral de cuenca aportante
+([`domain/hydrology.js`](../../dist/js/domain/hydrology.js)). Los cauces se dibujan en el mapa y
+como traza de líneas en el 3D; el encharcamiento, como mancha sobre el mapa.
+
+Sobre la malla real: 20 ms de cálculo, 21,47 km de cauces con cuenca mínima de 5 ha, 106,13 ha
+encharcadas desde 0,3 m y ninguna celda con relleno por debajo del DEM original.
+→ [Herramientas de análisis](herramientas-analisis.md)
+
 ## 2026-09-18 — Simulación de nivel de agua por cota
 
 Deslizador de cota que inunda las dos vistas a la vez: mancha azul sobre el mapa con la capa
