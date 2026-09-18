@@ -4,19 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Modelo 3D interactivo del terreno del área Manolo, generado a partir del DEM SRTMGL1 incluido en el producto ALOS PALSAR RTC.">
+  <meta name="theme-color" content="#015059">
   <title>Manolo - Modelo 3D de Elevación</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230c2027'/%3E%3Cpath d='M8 48 25 18l9 15 8-11 14 26Z' fill='%2378d4a5'/%3E%3Cpath d='M8 48h48' stroke='%23f2b35f' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="./assets/logo-gestiagro.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <main class="app-shell">
     <header class="topbar">
-      <div class="title-block">
-        <p class="eyebrow">MANOLO · EPSG:32620</p>
-        <h1>Modelo 3D de elevación</h1>
+      <div class="brand-lockup">
+        <img class="brand-logo" src="./assets/logo-gestiagro-blanco.png" alt="Gestiagro">
+        <div class="brand-content">
+          <p class="brand-name">GESTIAGRO</p>
+          <p class="brand-descriptor">Plataforma de Gestión Geográfica Agrícola</p>
+          <div class="title-line">
+            <span class="context-badge">MANOLO</span>
+            <h1>Modelo 3D de elevación</h1>
+          </div>
+          <p class="crs-label">WGS 84 / UTM zona 20N · EPSG:32620</p>
+        </div>
       </div>
       <div class="summary" aria-label="Resumen del modelo">
-        <span><strong>0-54 m</strong> elevación</span>
+        <span><strong>0-54 m.s.n.m.</strong> elevación</span>
         <span><strong>30 m</strong> resolución nominal</span>
         <span><strong>10 m</strong> curvas</span>
       </div>
@@ -26,6 +38,7 @@
       <div id="terrain-plot" role="img" aria-label="Superficie tridimensional interactiva del terreno"></div>
 
       <aside class="controls" aria-label="Controles del modelo">
+        <p class="panel-overline">VISUALIZACIÓN</p>
         <div class="control-group">
           <span class="control-label">Coloración</span>
           <div class="segmented" role="group" aria-label="Coloración de la superficie">
@@ -45,7 +58,10 @@
         </div>
       </aside>
 
-      <div class="source-note">DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160</div>
+      <div class="viewer-meta">
+        <span>DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160</span>
+        <span>Gestiagro © 2026 · Sistema v2.2.0</span>
+      </div>
       <div id="touch-hint" class="touch-hint">Arrastra para rotar · Pellizca para acercar</div>
       <div id="loading" class="loading" aria-live="polite">
         <div class="loading-mark"></div>

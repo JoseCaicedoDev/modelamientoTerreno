@@ -40,13 +40,13 @@
     connectgaps: false,
     showscale: true,
     colorbar: {
-      title: { text: 'Elevación<br>(m)', side: 'right', font: { color: '#dce9e6', size: 13 } },
-      tickfont: { color: '#b9ceca', size: 12 },
+      title: { text: 'Elevación<br>(m.s.n.m.)', side: 'right', font: { color: '#f1f5f9', size: 13, family: 'Montserrat' } },
+      tickfont: { color: '#cbd5e1', size: 12, family: 'Montserrat' },
       thickness: 14,
       len: 0.58,
       x: 0.97,
       outlinewidth: 0,
-      bgcolor: 'rgba(7,21,26,0.58)'
+      bgcolor: 'rgba(15,23,42,0.72)'
     },
     lighting: { ambient: 0.62, diffuse: 0.76, specular: 0.12, roughness: 0.82, fresnel: 0.08 },
     lightposition: { x: -120, y: -160, z: 220 },
@@ -63,39 +63,40 @@
         project: { z: true }
       }
     },
-    hovertemplate: 'Este UTM: %{x:,.1f} m<br>Norte UTM: %{y:,.1f} m<br>Elevación: %{z:.1f} m<extra></extra>'
+    hovertemplate: 'Este UTM: %{x:,.1f} m<br>Norte UTM: %{y:,.1f} m<br>Elevación: %{z:.1f} m.s.n.m.<extra></extra>'
   };
 
   const layout = {
     autosize: true,
     margin: { l: 0, r: 0, t: 0, b: 0 },
-    paper_bgcolor: '#07151a',
-    plot_bgcolor: '#07151a',
+    font: { family: 'Montserrat, system-ui, sans-serif', color: '#f1f5f9' },
+    paper_bgcolor: '#020617',
+    plot_bgcolor: '#020617',
     showlegend: false,
     scene: {
       camera,
       aspectmode: 'manual',
       aspectratio: { x: 1, y: data.aspectY, z: zAspect() },
-      bgcolor: '#07151a',
+      bgcolor: '#020617',
       xaxis: {
-        title: { text: 'Este UTM (m)', font: { color: '#9fb8b4', size: 12 } },
+        title: { text: 'Este UTM (m)', font: { color: '#cbd5e1', size: 12 } },
         tickformat: ',.0f',
-        tickfont: { color: '#79918e', size: 10 },
-        gridcolor: 'rgba(159,184,180,0.14)', zerolinecolor: 'rgba(159,184,180,0.24)',
-        backgroundcolor: '#0a1a20', showbackground: true, color: '#9fb8b4'
+        tickfont: { color: '#94a3b8', size: 10 },
+        gridcolor: 'rgba(148,163,184,0.18)', zerolinecolor: 'rgba(3,150,166,0.46)',
+        backgroundcolor: '#0f172a', showbackground: true, color: '#cbd5e1'
       },
       yaxis: {
-        title: { text: 'Norte UTM (m)', font: { color: '#9fb8b4', size: 12 } },
+        title: { text: 'Norte UTM (m)', font: { color: '#cbd5e1', size: 12 } },
         tickformat: ',.0f',
-        tickfont: { color: '#79918e', size: 10 },
-        gridcolor: 'rgba(159,184,180,0.14)', zerolinecolor: 'rgba(159,184,180,0.24)',
-        backgroundcolor: '#0a1a20', showbackground: true, color: '#9fb8b4'
+        tickfont: { color: '#94a3b8', size: 10 },
+        gridcolor: 'rgba(148,163,184,0.18)', zerolinecolor: 'rgba(3,150,166,0.46)',
+        backgroundcolor: '#0f172a', showbackground: true, color: '#cbd5e1'
       },
       zaxis: {
-        title: { text: 'Elevación (m)', font: { color: '#9fb8b4', size: 12 } },
-        tickfont: { color: '#79918e', size: 10 },
-        gridcolor: 'rgba(159,184,180,0.13)', zerolinecolor: 'rgba(159,184,180,0.24)',
-        backgroundcolor: '#0a1a20', showbackground: true, color: '#9fb8b4',
+        title: { text: 'Elevación (m.s.n.m.)', font: { color: '#cbd5e1', size: 12 } },
+        tickfont: { color: '#94a3b8', size: 10 },
+        gridcolor: 'rgba(148,163,184,0.18)', zerolinecolor: 'rgba(3,150,166,0.46)',
+        backgroundcolor: '#0f172a', showbackground: true, color: '#cbd5e1',
         range: [data.minElevation - 2, data.maxElevation + 3]
       }
     }
@@ -116,7 +117,7 @@
       colorscale: [elevation ? elevationScale : shadeScale],
       cmin: elevation ? data.minElevation : 0,
       cmax: elevation ? data.maxElevation : 255,
-      'colorbar.title.text': elevation ? 'Elevación<br>(m)' : 'Relieve<br>sombreado',
+      'colorbar.title.text': elevation ? 'Elevación<br>(m.s.n.m.)' : 'Relieve<br>sombreado',
       showscale: elevation
     }, [0]);
     colorButtons.forEach(button => button.classList.toggle('active', button.dataset.colorMode === mode));
