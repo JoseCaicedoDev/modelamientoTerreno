@@ -481,6 +481,60 @@ input[type="range"] {
 
 @keyframes breathe { 50% { transform: translateY(-5px); opacity: 0.68; } }
 
+/* Escritorio: encabezado compacto sin perder información. */
+@media (min-width: 901px) {
+  .topbar {
+    min-height: 62px;
+    height: 62px;
+    gap: 20px;
+    padding: 3px clamp(20px, 2.5vw, 40px);
+  }
+
+  .brand-logo {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+  }
+
+  .brand-content { padding-left: 5px; }
+
+  .brand-name {
+    font-size: 10px;
+    line-height: 1;
+  }
+
+  .brand-descriptor {
+    margin-top: 1px;
+    font-size: 8px;
+    line-height: 1.05;
+  }
+
+  .title-line {
+    gap: 8px;
+    margin-top: 3px;
+  }
+
+  .context-badge {
+    padding: 3px 7px;
+    font-size: 8px;
+  }
+
+  h1 { font-size: clamp(19px, 1.65vw, 24px); }
+
+  .crs-label {
+    margin-top: 2px;
+    font-size: 7px;
+    line-height: 1;
+  }
+
+  .summary {
+    gap: 6px;
+    font-size: 9px;
+  }
+
+  .summary span { padding: 5px 9px; }
+}
+
 @media (max-width: 900px) {
   .topbar { min-height: 98px; padding: 6px 14px; }
   .brand-logo { width: 88px; height: 88px; flex-basis: 88px; }
