@@ -1,6 +1,10 @@
 (() => {
   const data = window.TERRAIN_DATA;
+  const viewer = document.querySelector('.viewer');
   const plot = document.getElementById('terrain-plot');
+  const satelliteMapElement = document.getElementById('satellite-map');
+  const satelliteLegend = document.getElementById('satellite-legend');
+  const sourceLabel = document.getElementById('source-label');
   const loading = document.getElementById('loading');
   const error = document.getElementById('error');
   const exaggeration = document.getElementById('exaggeration');
@@ -8,6 +12,8 @@
   const contoursButton = document.getElementById('contours-toggle');
   const resetButton = document.getElementById('reset-camera');
   const colorButtons = [...document.querySelectorAll('[data-color-mode]')];
+  const viewButtons = [...document.querySelectorAll('[data-view-mode]')];
+  const terrainControls = [...document.querySelectorAll('.terrain-only')];
   const touchHint = document.getElementById('touch-hint');
 
   const elevationScale = [
@@ -23,6 +29,7 @@
   const camera = { eye: { x: 1.34, y: -1.5, z: 0.78 }, center: { x: 0, y: 0, z: -0.08 } };
   let colorMode = 'elevation';
   let contoursVisible = true;
+  let satelliteMap;
 
   function zAspect() {
     return 0.055 * Number(exaggeration.value);
@@ -130,6 +137,71 @@
     contoursButton.setAttribute('aria-pressed', String(next));
   }
 
+  function initializeSatelliteMap() {
+    if (satelliteMap || !window.L || !data.boundary || !data.buffer) return;
+
+    satelliteMap = L.map(satelliteMapElement, {
+      zoomControl: false,
+      attributionControl: true
+    });
+
+    L.control.zoom({ position: 'topright' }).addTo(satelliteMap);
+    L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(satelliteMap);
+
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 19,
+        attribution: 'Imágenes © Esri, Maxar, Earthstar Geographics y GIS User Community'
+      }
+    ).addTo(satelliteMap);
+
+    const bufferLayer = L.polygon(data.buffer, {
+      color: '#0396a6',
+      weight: 2,
+      dashArray: '8 7',
+      fillColor: '#0396a6',
+      fillOpacity: 0.08
+    }).addTo(satelliteMap);
+
+    L.polygon(data.boundary, {
+      color: '#00cba9',
+      weight: 3,
+      fillColor: '#00cba9',
+      fillOpacity: 0.12
+    }).addTo(satelliteMap);
+
+    satelliteMap.fitBounds(bufferLayer.getBounds(), { padding: [34, 34] });
+  }
+
+  function setViewMode(mode) {
+    const showSatellite = mode === 'satellite';
+    plot.hidden = showSatellite;
+    satelliteMapElement.hidden = !showSatellite;
+    satelliteLegend.hidden = !showSatellite;
+    viewer.classList.toggle('satellite-active', showSatellite);
+    terrainControls.forEach(control => { control.hidden = showSatellite; });
+    touchHint.textContent = showSatellite
+      ? 'Arrastra para mover · Pellizca para acercar'
+      : 'Arrastra para rotar · Pellizca para acercar';
+    sourceLabel.textContent = showSatellite
+      ? 'World Imagery · Área Manolo y zona de influencia de 200 m'
+      : 'DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160';
+
+    viewButtons.forEach(button => {
+      const active = button.dataset.viewMode === mode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+
+    if (showSatellite) {
+      initializeSatelliteMap();
+      window.requestAnimationFrame(() => satelliteMap?.invalidateSize());
+    } else {
+      window.requestAnimationFrame(() => Plotly.Plots.resize(plot));
+    }
+  }
+
   if (!window.Plotly || !data) {
     loading.hidden = true;
     error.hidden = false;
@@ -146,8 +218,16 @@
   });
 
   colorButtons.forEach(button => button.addEventListener('click', () => setColorMode(button.dataset.colorMode)));
+  viewButtons.forEach(button => button.addEventListener('click', () => setViewMode(button.dataset.viewMode)));
   contoursButton.addEventListener('click', () => setContours(!contoursVisible));
   resetButton.addEventListener('click', () => Plotly.relayout(plot, { 'scene.camera': camera }));
-  window.addEventListener('resize', () => Plotly.Plots.resize(plot));
+  window.addEventListener('resize', () => {
+    Plotly.Plots.resize(plot);
+    satelliteMap?.invalidateSize();
+  });
   window.setTimeout(() => { touchHint.style.opacity = '0'; }, 3600);
+
+  if (new URLSearchParams(window.location.search).get('view') === 'satellite') {
+    setViewMode('satellite');
+  }
 })();

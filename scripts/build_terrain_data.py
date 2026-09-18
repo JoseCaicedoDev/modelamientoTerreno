@@ -34,7 +34,9 @@ def geotiff(path):
 
 
 to_utm = Transformer.from_crs(4326, 32620, always_xy=True).transform
+to_wgs84 = Transformer.from_crs(32620, 4326, always_xy=True).transform
 area = transform(to_utm, Polygon(COORDS)).buffer(200)
+area_wgs84 = transform(to_wgs84, area)
 dem, px, py, x0, y0, nodata = geotiff(DEM)
 minx, miny, maxx, maxy = area.bounds
 c0 = max(0, int(np.floor((minx - x0) / px)) - 2)
@@ -95,7 +97,9 @@ payload = {
     "actualMaxElevation": round(float(values.max()), 1),
     "aspectY": round(float((ys[0] - ys[-1]) / (xs[-1] - xs[0])), 4),
     "crs": "EPSG:32620",
-    "source": "SRTMGL1 / ALOS PALSAR RTC ALPSRP274680160"
+    "source": "SRTMGL1 / ALOS PALSAR RTC ALPSRP274680160",
+    "boundary": [[round(lat, 8), round(lon, 8)] for lon, lat in Polygon(COORDS).exterior.coords],
+    "buffer": [[round(lat, 8), round(lon, 8)] for lon, lat in area_wgs84.exterior.coords]
 }
 OUT.write_text("window.TERRAIN_DATA = " + json.dumps(payload, separators=(",", ":")) + ";\n", encoding="utf-8")
 print(f"{OUT} ({OUT.stat().st_size} bytes, {len(y_utm)}x{len(x_utm)} cells)")

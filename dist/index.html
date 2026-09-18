@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -36,10 +37,19 @@
 
     <section class="viewer" aria-label="Visor tridimensional del terreno">
       <div id="terrain-plot" role="img" aria-label="Superficie tridimensional interactiva del terreno"></div>
+      <div id="satellite-map" role="region" aria-label="Imagen satelital del área Manolo" hidden></div>
 
       <aside class="controls" aria-label="Controles del modelo">
         <p class="panel-overline">VISUALIZACIÓN</p>
-        <div class="control-group">
+        <div class="control-group view-selector">
+          <span class="control-label">Vista</span>
+          <div class="segmented" role="group" aria-label="Tipo de vista">
+            <button class="segmented-button active" data-view-mode="terrain" type="button" aria-pressed="true">Modelo 3D</button>
+            <button class="segmented-button" data-view-mode="satellite" type="button" aria-pressed="false">Satélite</button>
+          </div>
+        </div>
+
+        <div class="control-group terrain-only">
           <span class="control-label">Coloración</span>
           <div class="segmented" role="group" aria-label="Coloración de la superficie">
             <button class="segmented-button active" data-color-mode="elevation" type="button">Elevación</button>
@@ -47,19 +57,25 @@
           </div>
         </div>
 
-        <div class="control-group">
+        <div class="control-group terrain-only">
           <label class="control-label" for="exaggeration">Exageración vertical <output id="exaggeration-value">5×</output></label>
           <input id="exaggeration" type="range" min="1" max="10" step="1" value="5">
         </div>
 
-        <div class="button-row">
+        <div class="button-row terrain-only">
           <button id="contours-toggle" class="utility-button active" type="button" aria-pressed="true">Curvas 10 m</button>
           <button id="reset-camera" class="utility-button" type="button">Restablecer vista</button>
         </div>
       </aside>
 
+      <div id="satellite-legend" class="map-legend" hidden>
+        <p class="map-legend-title">Área de estudio</p>
+        <span><i class="legend-line boundary-line"></i>Levantamiento preliminar</span>
+        <span><i class="legend-line buffer-line"></i>Zona de influencia · 200 m</span>
+      </div>
+
       <div class="viewer-meta">
-        <span>DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160</span>
+        <span id="source-label">DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160</span>
         <span>Gestiagro © 2026 · Sistema v2.2.0</span>
       </div>
       <div id="touch-hint" class="touch-hint">Arrastra para rotar · Pellizca para acercar</div>
@@ -72,6 +88,7 @@
   </main>
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="./terrain-data.js"></script>
   <script src="./app.js"></script>
 </body>
