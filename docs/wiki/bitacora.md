@@ -2,6 +2,17 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Medición de distancias y áreas
+
+Nueva herramienta en el panel satelital: polilínea con vértices exactos (sin ajustar a la celda)
+que al cerrarse sobre el primer punto pasa a polígono. Calcula longitud y perímetro, longitud sobre
+el relieve, área proyectada, área real por factor de pendiente y desnivel
+([`domain/measure.js`](../../dist/js/domain/measure.js)).
+
+El área se contrastó con `shapely` sobre el polígono de estudio: 591,384 ha en ambos.
+`slopeFactor` pasó a usar diferencias de un solo lado en los bordes de la malla.
+→ [Herramientas de análisis](herramientas-analisis.md)
+
 ## 2026-09-18 — Infraestructura compartida de herramientas
 
 Base para las herramientas de análisis: `domain/grid.js` (malla plana, vecinos D8, orden por

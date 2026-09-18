@@ -91,9 +91,8 @@ export function createSatelliteMap({
   function finishDrawing() {
     if (!drawing?.active) return;
     const { config, points, preview } = drawing;
-    const minimum = config.modo === 'poligono' ? 3 : 2;
-    if (points.length < minimum) return;
-    if (config.modo === 'poligono') {
+    if (points.length < 2) return;
+    if (drawing.cerrado) {
       preview?.remove();
       drawing.preview = null;
       leaflet.polygon(points.map(point => point.latlng), {
@@ -109,7 +108,7 @@ export function createSatelliteMap({
     }
     drawing.active = false;
     element.closest('.satellite-pane')?.classList.remove('drawing-active');
-    config.onFinalizar?.(points.slice());
+    config.onFinalizar?.(points.slice(), { cerrado: Boolean(drawing.cerrado) });
   }
 
   function handleDrawingClick(event) {
@@ -121,10 +120,12 @@ export function createSatelliteMap({
       return;
     }
 
-    if (config.modo === 'poligono' && points.length >= 3) {
+    // Cerrar sobre el primer vértice convierte el recorrido en un polígono.
+    if (config.permitirCierre && points.length >= 3) {
       const first = map.latLngToContainerPoint(points[0].latlng);
       const current = map.latLngToContainerPoint(event.latlng);
       if (first.distanceTo(current) <= CLOSE_TOLERANCE_PIXELS) {
+        drawing.cerrado = true;
         finishDrawing();
         return;
       }
@@ -170,7 +171,7 @@ export function createSatelliteMap({
     cancelDrawing();
     const group = layerGroup(config.grupo ?? 'dibujo');
     group.clearLayers();
-    drawing = { config, group, points: [], preview: null, active: true };
+    drawing = { config, group, points: [], preview: null, active: true, cerrado: false };
     element.closest('.satellite-pane')?.classList.add('drawing-active');
   }
 

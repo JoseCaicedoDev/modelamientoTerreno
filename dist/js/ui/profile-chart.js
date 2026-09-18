@@ -1,4 +1,5 @@
 import { BRAND, coordinateFormatter, formatDistance } from '../config.js';
+import { createStat } from './result-panel.js';
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 const SIZE = Object.freeze({ width: 640, height: 210 });
@@ -9,17 +10,6 @@ function svgElement(name, attributes = {}, text = '') {
   Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
   if (text) element.textContent = text;
   return element;
-}
-
-function createStat(label, value) {
-  const item = document.createElement('div');
-  item.className = 'profile-stat';
-  const name = document.createElement('span');
-  const result = document.createElement('strong');
-  name.textContent = label;
-  result.textContent = value;
-  item.append(name, result);
-  return item;
 }
 
 export function createProfileChart({ chartElement, statsElement }) {

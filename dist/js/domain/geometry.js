@@ -48,20 +48,28 @@ export function boundingBox(points) {
 
 // Factor de drapeado de una celda: sec(pendiente) por diferencias centradas.
 // Multiplica el área proyectada para estimar el área real sobre el relieve.
+// En los bordes de la malla y junto a celdas nulas se usa la diferencia de un solo lado.
 export function slopeFactor(grid, index) {
   const row = grid.rowOf(index);
   const column = grid.columnOf(index);
-  const east = grid.isValid(grid.toFlat(row, column + 1)) ? grid.toFlat(row, column + 1) : index;
-  const west = grid.isValid(grid.toFlat(row, column - 1)) ? grid.toFlat(row, column - 1) : index;
-  const north = row > 0 && grid.isValid(grid.toFlat(row - 1, column)) ? grid.toFlat(row - 1, column) : index;
-  const south = row < grid.rows - 1 && grid.isValid(grid.toFlat(row + 1, column)) ? grid.toFlat(row + 1, column) : index;
-  if (column <= 0 || column >= grid.columns - 1) return 1;
-  const runX = (east === index || west === index ? 1 : 2) * grid.cellSize;
-  const runY = (north === index || south === index ? 1 : 2) * grid.cellSize;
-  const slopeX = (grid.elevationAt(east) - grid.elevationAt(west)) / runX;
-  const slopeY = (grid.elevationAt(north) - grid.elevationAt(south)) / runY;
-  if (Number.isNaN(slopeX) || Number.isNaN(slopeY)) return 1;
+  const east = column < grid.columns - 1 ? grid.toFlat(row, column + 1) : -1;
+  const west = column > 0 ? grid.toFlat(row, column - 1) : -1;
+  const north = row > 0 ? grid.toFlat(row - 1, column) : -1;
+  const south = row < grid.rows - 1 ? grid.toFlat(row + 1, column) : -1;
+  const slopeX = axisSlope(grid, index, east, west);
+  const slopeY = axisSlope(grid, index, north, south);
   return Math.sqrt(1 + slopeX * slopeX + slopeY * slopeY);
+}
+
+function axisSlope(grid, index, forward, backward) {
+  const forwardValid = forward >= 0 && grid.isValid(forward);
+  const backwardValid = backward >= 0 && grid.isValid(backward);
+  if (forwardValid && backwardValid) {
+    return (grid.elevationAt(forward) - grid.elevationAt(backward)) / (2 * grid.cellSize);
+  }
+  if (forwardValid) return (grid.elevationAt(forward) - grid.elevationAt(index)) / grid.cellSize;
+  if (backwardValid) return (grid.elevationAt(index) - grid.elevationAt(backward)) / grid.cellSize;
+  return 0;
 }
 
 // Triangulación en abanico desde el centroide. Válida para los polígonos convexos

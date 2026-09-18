@@ -26,6 +26,8 @@ export const INITIAL_CAMERA = Object.freeze({
   center: { x: 0, y: 0, z: -0.08 }
 });
 
+export const MEASURE_COLOR = '#f7b955';
+
 export const WATER_COLOR = '#2488bd';
 
 export const STREAM_COLOR = '#38bdf8';
@@ -41,6 +43,23 @@ export function formatDistance(distance) {
   return distance >= 1000
     ? `${(distance / 1000).toLocaleString('es-CO', { maximumFractionDigits: 2 })} km`
     : `${Math.round(distance).toLocaleString('es-CO')} m`;
+}
+
+export function formatArea(squareMeters) {
+  const hectares = squareMeters / 10000;
+  return hectares >= 1
+    ? `${hectares.toLocaleString('es-CO', { maximumFractionDigits: 2 })} ha`
+    : `${Math.round(squareMeters).toLocaleString('es-CO')} m²`;
+}
+
+export function formatVolume(cubicMeters) {
+  return cubicMeters >= 1e6
+    ? `${(cubicMeters / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 2 })} hm³`
+    : `${Math.round(cubicMeters).toLocaleString('es-CO')} m³`;
+}
+
+export function formatElevation(value) {
+  return `${coordinateFormatter.format(value)} m`;
 }
 
 export function formatCoordinateLabel(point) {

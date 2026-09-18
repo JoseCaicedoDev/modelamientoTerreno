@@ -33,6 +33,7 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/domain/terrain.js`](../../dist/js/domain/terrain.js) | Punto DEM más cercano, muestreo lineal y construcción de la malla satelital |
 | [`dist/js/domain/grid.js`](../../dist/js/domain/grid.js) | Malla del DEM como arreglo plano: índice ↔ coordenada, vecinos D8, orden por elevación |
 | [`dist/js/domain/geometry.js`](../../dist/js/domain/geometry.js) | Longitudes, áreas, punto en polígono, factor de drapeado y triangulación en abanico |
+| [`dist/js/domain/measure.js`](../../dist/js/domain/measure.js) | Medición de recorridos y polígonos: longitud drapeada, área proyectada y área real |
 | [`dist/js/adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js) | Trazas, escena y operaciones Plotly |
 | [`dist/js/adapters/satellite-map.js`](../../dist/js/adapters/satellite-map.js) | Capas Leaflet, marcador sincronizado, dibujo genérico y capas del usuario |
 | [`dist/js/adapters/raster-overlay.js`](../../dist/js/adapters/raster-overlay.js) | Capa canvas propia para pintar rásteres derivados de la malla |

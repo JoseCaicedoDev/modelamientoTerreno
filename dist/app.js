@@ -1,6 +1,7 @@
-import { formatCoordinateLabel, UTM_20N } from './js/config.js';
+import { formatArea, formatCoordinateLabel, formatDistance, formatElevation, MEASURE_COLOR, UTM_20N } from './js/config.js';
 import { createTerrainModel } from './js/domain/terrain.js';
 import { createGrid } from './js/domain/grid.js';
+import { measurePath } from './js/domain/measure.js';
 import { createTerrainPlot } from './js/adapters/terrain-plot.js';
 import { createSatelliteMap } from './js/adapters/satellite-map.js';
 import { createProfileChart } from './js/ui/profile-chart.js';
@@ -24,11 +25,15 @@ const elements = Object.freeze({
   exaggerationPanel: byId('exaggeration-panel'),
   contours: byId('contours-toggle'),
   profileTool: byId('profile-tool'),
-  profileInstruction: byId('profile-instruction'),
+  toolInstruction: byId('tool-instruction'),
   profilePanel: byId('profile-panel'),
   profileChart: byId('profile-chart'),
   profileStats: byId('profile-stats'),
   profileClose: byId('profile-close'),
+  measureTool: byId('measure-tool'),
+  measurePanel: byId('measure-panel'),
+  measureStats: byId('measure-stats'),
+  measureClose: byId('measure-close'),
   resetCamera: byId('reset-camera'),
   touchHint: byId('touch-hint'),
   colorButtons: [...document.querySelectorAll('[data-color-mode]')]
@@ -83,7 +88,7 @@ function startApplication() {
     panel: elements.profilePanel,
     stats: elements.profileStats,
     pane: elements.satellitePane,
-    visibleClass: 'profile-visible',
+    visibleClass: 'panel-visible',
     closeButton: elements.profileClose,
     onClose: () => tools.deactivateAll()
   });
@@ -144,9 +149,35 @@ function startApplication() {
     elements.exaggerationToggle.setAttribute('aria-expanded', String(open));
   }
 
+  const measurePanel = createResultPanel({
+    panel: elements.measurePanel,
+    stats: elements.measureStats,
+    pane: elements.satellitePane,
+    visibleClass: 'panel-visible',
+    closeButton: elements.measureClose,
+    onClose: () => tools.deactivateAll()
+  });
+
   function setInstruction(text) {
-    elements.profileInstruction.textContent = text || '';
-    elements.profileInstruction.hidden = !text;
+    elements.toolInstruction.textContent = text || '';
+    elements.toolInstruction.hidden = !text;
+  }
+
+  function showMeasurement(vertices, cerrado) {
+    const medida = measurePath(vertices, { terrain, grid, cerrado });
+    if (!medida) return;
+    const stats = [
+      [medida.cerrado ? 'Perímetro' : 'Longitud', formatDistance(medida.longitudProyectada)],
+      ['Sobre el relieve', formatDistance(medida.longitudDrapeada)]
+    ];
+    if (medida.cerrado) {
+      stats.push(['Área proyectada', formatArea(medida.area)]);
+      stats.push(['Área real', formatArea(medida.areaReal)]);
+    }
+    stats.push(['Vértices', String(medida.vertices)]);
+    if (medida.desnivel !== null) stats.push(['Desnivel', formatElevation(medida.desnivel)]);
+    measurePanel.setStats(stats);
+    measurePanel.show();
   }
 
   function renderProfile(start, end) {
@@ -169,6 +200,35 @@ function startApplication() {
       profileChart.clear();
     }
   });
+
+  tools.register('medicion', {
+    button: elements.measureTool,
+    activate: () => {
+      satelliteMap.beginDrawing({
+        modo: 'polilinea',
+        grupo: 'medicion',
+        color: MEASURE_COLOR,
+        snap: false,
+        permitirCierre: true,
+        onInstruccion: setInstruction,
+        onVertice: (_, vertices) => {
+          if (vertices.length >= 2) showMeasurement(vertices, false);
+        },
+        onFinalizar: (vertices, { cerrado }) => {
+          setInstruction(null);
+          showMeasurement(vertices, cerrado);
+        }
+      });
+      setInstruction('Toca puntos para medir · doble clic o Enter para terminar · cierra sobre el primer punto para el área');
+    },
+    deactivate: () => {
+      satelliteMap.cancelDrawing();
+      setInstruction(null);
+      measurePanel.hide();
+    }
+  });
+
+  elements.measureTool.addEventListener('click', () => tools.toggle('medicion'));
 
   elements.exaggeration.addEventListener('input', () => {
     elements.exaggerationValue.textContent = `${elements.exaggeration.value}×`;

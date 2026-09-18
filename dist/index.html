@@ -43,9 +43,14 @@
         </section>
         <section class="view-pane satellite-pane" aria-label="Imagen satelital">
           <span class="pane-heading">Imagen satelital</span>
-          <button id="profile-tool" class="tool-button satellite-profile-tool" type="button" aria-pressed="false" aria-label="Generar perfil topográfico" data-tooltip="Perfil topográfico">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18"/><path d="m4 15 4-5 3 3 4-7 5 9"/><circle cx="4" cy="15" r="1"/><circle cx="20" cy="15" r="1"/></svg>
-          </button>
+          <div class="pane-tools" role="group" aria-label="Herramientas de análisis">
+            <button id="profile-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Generar perfil topográfico" data-tooltip="Perfil topográfico">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18"/><path d="m4 15 4-5 3 3 4-7 5 9"/><circle cx="4" cy="15" r="1"/><circle cx="20" cy="15" r="1"/></svg>
+            </button>
+            <button id="measure-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Medir distancias y áreas" data-tooltip="Medir distancias y áreas">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 15 6-6 6 6-6 6-6-6Z"/><path d="M13 5h8v8"/><path d="m21 5-7 7"/></svg>
+            </button>
+          </div>
           <div id="satellite-map" role="region" aria-label="Imagen satelital del área de estudio"></div>
           <div id="map-coordinate" class="coordinate-readout" hidden></div>
           <div id="satellite-legend" class="map-legend">
@@ -53,17 +58,29 @@
             <span><i class="legend-line boundary-line"></i>Levantamiento preliminar</span>
             <span><i class="legend-line buffer-line"></i>Zona de influencia · 200 m</span>
           </div>
-          <div id="profile-instruction" class="profile-instruction" hidden>Selecciona el punto inicial del perfil</div>
-          <section id="profile-panel" class="profile-panel" aria-label="Perfil topográfico" hidden>
-            <header class="profile-header">
+          <div id="tool-instruction" class="tool-instruction" hidden></div>
+          <section id="profile-panel" class="result-panel" aria-label="Perfil topográfico" hidden>
+            <header class="result-header">
               <div>
-                <span class="profile-overline">ANÁLISIS DEL TERRENO</span>
+                <span class="result-overline">ANÁLISIS DEL TERRENO</span>
                 <h2>Perfil topográfico</h2>
               </div>
-              <button id="profile-close" class="profile-close" type="button" aria-label="Cerrar perfil topográfico">×</button>
+              <button id="profile-close" class="result-close" type="button" aria-label="Cerrar perfil topográfico">×</button>
             </header>
             <svg id="profile-chart" class="profile-chart" viewBox="0 0 640 210" role="img" aria-label="Gráfico del perfil topográfico"></svg>
-            <div id="profile-stats" class="profile-stats"></div>
+            <div id="profile-stats" class="result-stats"></div>
+          </section>
+
+          <section id="measure-panel" class="result-panel" aria-label="Medición de distancias y áreas" hidden>
+            <header class="result-header">
+              <div>
+                <span class="result-overline">ANÁLISIS DEL TERRENO</span>
+                <h2>Distancias y áreas</h2>
+              </div>
+              <button id="measure-close" class="result-close" type="button" aria-label="Cerrar medición">×</button>
+            </header>
+            <div id="measure-stats" class="result-stats"></div>
+            <p class="result-note">El área real se estima con la pendiente media de las celdas del DEM (25 m). Valor indicativo.</p>
           </section>
         </section>
       </div>

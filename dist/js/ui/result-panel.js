@@ -1,7 +1,7 @@
 // Panel de resultados compartido por el perfil, la medición, la inundación y el drenaje.
 // Opera sobre el marcado ya presente en index.html; no construye la estructura.
 
-function createStat(label, value) {
+export function createStat(label, value) {
   const item = document.createElement('div');
   item.className = 'result-stat';
   const name = document.createElement('span');
