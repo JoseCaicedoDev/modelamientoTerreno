@@ -14,6 +14,18 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
   aproximadamente 25 m después del submuestreo del producto RTC. Conviene explicar esta diferencia
   al usuario o unificar el indicador.
 
+## Herramientas de análisis
+
+- La medición rechaza los puntos que caen fuera de la zona de influencia, porque ahí el DEM es nulo
+  y no hay elevación con la que drapear. Es coherente, pero impide medir en el entorno del área.
+- El área real y el análisis hidrológico heredan el suavizado gaussiano del canal de datos: ambos
+  subestiman la rugosidad y no deben usarse como cubicación ni como diseño hidráulico.
+- Priority-Flood trata todo el borde del área como salida, de modo que una depresión pegada al
+  límite puede quedar infravalorada.
+- Las capas KML y KMZ solo se dibujan en el mapa; no se drapean sobre el modelo 3D.
+- Las capas cargadas viven en memoria: al recargar la página se pierden, porque no hay servidor
+  donde guardarlas.
+
 ## Reproducibilidad
 
 - El DEM de entrada vive fuera del repositorio y falta documentar una fuente de descarga reproducible.
@@ -28,6 +40,11 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
   se validan mediante navegador y no forman parte del workflow de GitHub Actions.
 - `terrain-data.js` sigue exponiendo un global porque es una salida generada. Migrarlo a módulo
   requeriría coordinar el script Python y la carga inicial.
+
+## Resuelto con las herramientas de análisis
+
+- `actualMinElevation` y `actualMaxElevation` ya se usan: definen el rango del deslizador de cota.
+- El visor dejó de ser solo de consulta: mide, simula inundación, deriva drenaje y carga capas.
 
 ## Resuelto en v2.3.0
 
