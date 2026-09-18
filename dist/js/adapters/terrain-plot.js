@@ -1,5 +1,16 @@
-import { BRAND, ELEVATION_SCALE, INITIAL_CAMERA } from '../config.js';
+import { BRAND, ELEVATION_SCALE, INITIAL_CAMERA, WATER_COLOR } from '../config.js';
 import { buildSatelliteMeshData } from '../domain/terrain.js';
+import { fanTriangulation } from '../domain/geometry.js';
+
+// Índices de traza estables. Todas se reservan en el newPlot inicial y se muestran u ocultan
+// con restyle; nunca se añaden ni se eliminan trazas en caliente para no desplazar los índices.
+export const TRAZA = Object.freeze({
+  superficie: 0,
+  satelital: 1,
+  cursor: 2,
+  cauces: 3,
+  agua: 4
+});
 
 function createSurfaceTrace(data) {
   return {
@@ -74,6 +85,43 @@ function createCursorTrace() {
   };
 }
 
+function createStreamsTrace() {
+  return {
+    type: 'scatter3d',
+    mode: 'lines',
+    x: [],
+    y: [],
+    z: [],
+    visible: false,
+    hoverinfo: 'skip',
+    showlegend: false,
+    line: { color: '#38bdf8', width: 3 }
+  };
+}
+
+// Plano de agua recortado al polígono recibido. Cambiar la cota es un restyle de z, y la
+// intersección con el relieve la resuelve el z-buffer de WebGL: las lomas emergen solas.
+// Debe ser la última traza y la única translúcida para evitar artefactos de ordenación.
+function createWaterTrace(ring) {
+  const mesh = ring?.length ? fanTriangulation(ring) : { x: [], y: [], i: [], j: [], k: [] };
+  return {
+    type: 'mesh3d',
+    x: mesh.x,
+    y: mesh.y,
+    z: mesh.x.map(() => 0),
+    i: mesh.i,
+    j: mesh.j,
+    k: mesh.k,
+    visible: false,
+    color: WATER_COLOR,
+    opacity: 0.55,
+    flatshading: true,
+    showscale: false,
+    hoverinfo: 'skip',
+    lighting: { ambient: 0.92, diffuse: 0.3, specular: 0.05, roughness: 0.6, fresnel: 0.1 }
+  };
+}
+
 function axis(title) {
   return {
     title: { text: title, font: { color: BRAND.muted, size: 12 } },
@@ -118,19 +166,25 @@ const PLOT_CONFIG = Object.freeze({
   modeBarButtonsToRemove: ['toImage', 'sendDataToCloud', 'lasso2d', 'select2d']
 });
 
-export function createTerrainPlot({ element, data, plotly = window.Plotly, onHover, onLeave }) {
+export function createTerrainPlot({ element, data, waterRing, plotly = window.Plotly, onHover, onLeave }) {
   let initialized = false;
 
   async function initialize(exaggeration = 2) {
     await plotly.newPlot(
       element,
-      [createSurfaceTrace(data), createSatelliteTrace(data), createCursorTrace()],
+      [
+        createSurfaceTrace(data),
+        createSatelliteTrace(data),
+        createCursorTrace(),
+        createStreamsTrace(),
+        createWaterTrace(waterRing)
+      ],
       createLayout(data, exaggeration),
       PLOT_CONFIG
     );
     element.on('plotly_hover', event => {
       const point = event.points?.[0];
-      if (!point || point.curveNumber === 2) return;
+      if (!point || point.curveNumber !== TRAZA.superficie && point.curveNumber !== TRAZA.satelital) return;
       onHover?.(Number(point.x), Number(point.y));
     });
     element.on('plotly_unhover', () => onLeave?.());
@@ -140,13 +194,13 @@ export function createTerrainPlot({ element, data, plotly = window.Plotly, onHov
   function setColorMode(mode) {
     if (!initialized) return;
     const satellite = mode === 'satellite';
-    plotly.restyle(element, { visible: !satellite }, [0]);
-    plotly.restyle(element, { visible: satellite }, [1]);
+    plotly.restyle(element, { visible: !satellite }, [TRAZA.superficie]);
+    plotly.restyle(element, { visible: satellite }, [TRAZA.satelital]);
   }
 
   function setContours(visible) {
     if (!initialized) return;
-    plotly.restyle(element, { 'contours.z.show': visible, 'contours.z.project.z': visible }, [0]);
+    plotly.restyle(element, { 'contours.z.show': visible, 'contours.z.project.z': visible }, [TRAZA.superficie]);
   }
 
   function setExaggeration(value) {
@@ -163,16 +217,55 @@ export function createTerrainPlot({ element, data, plotly = window.Plotly, onHov
       x: [[point.x, point.x]],
       y: [[point.y, point.y]],
       z: [[point.z + 0.5, point.z + 8]]
-    }, [2]);
+    }, [TRAZA.cursor]);
   }
 
   function clearCursor() {
-    if (initialized) plotly.restyle(element, { x: [[]], y: [[]], z: [[]] }, [2]);
+    if (initialized) plotly.restyle(element, { x: [[]], y: [[]], z: [[]] }, [TRAZA.cursor]);
+  }
+
+  function setWaterLevel(level) {
+    if (!initialized) return;
+    if (level === null || level === undefined) {
+      plotly.restyle(element, { visible: false }, [TRAZA.agua]);
+      return;
+    }
+    const vertices = element.data[TRAZA.agua].x.length;
+    plotly.restyle(element, {
+      z: [new Array(vertices).fill(level)],
+      visible: true
+    }, [TRAZA.agua]);
+  }
+
+  // lines: { x, y, z } con null como separador entre tramos, o null para ocultar la traza.
+  function setStreams(lines) {
+    if (!initialized) return;
+    if (!lines) {
+      plotly.restyle(element, { visible: false, x: [[]], y: [[]], z: [[]] }, [TRAZA.cauces]);
+      return;
+    }
+    plotly.restyle(element, {
+      x: [lines.x],
+      y: [lines.y],
+      z: [lines.z],
+      visible: true
+    }, [TRAZA.cauces]);
   }
 
   function resize() {
     if (initialized) plotly.Plots.resize(element);
   }
 
-  return Object.freeze({ initialize, setColorMode, setContours, setExaggeration, resetCamera, showCursor, clearCursor, resize });
+  return Object.freeze({
+    initialize,
+    setColorMode,
+    setContours,
+    setExaggeration,
+    resetCamera,
+    showCursor,
+    clearCursor,
+    setWaterLevel,
+    setStreams,
+    resize
+  });
 }

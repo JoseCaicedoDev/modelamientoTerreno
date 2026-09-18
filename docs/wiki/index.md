@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · arquitectura modular ES · Sistema v2.3.0
+Actualizada el 2026-09-18 · infraestructura de herramientas de análisis · Sistema v2.3.0
 
 ## Páginas
 

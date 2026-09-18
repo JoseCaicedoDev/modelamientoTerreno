@@ -2,6 +2,18 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Infraestructura compartida de herramientas
+
+Base para las herramientas de análisis: `domain/grid.js` (malla plana, vecinos D8, orden por
+elevación), `domain/geometry.js` (longitudes, áreas, punto en polígono, factor de drapeado),
+`ui/tool-controller.js` (herramienta activa exclusiva), `ui/result-panel.js` (panel de resultados
+compartido) y `adapters/raster-overlay.js` (capa canvas con tabla píxel → celda).
+
+`satellite-map.js` sustituye el trazado fijo del perfil por `beginDrawing` genérico con grupos de
+capas por herramienta, y `terrain-plot.js` reserva las trazas `cauces` y `agua` con índices
+nombrados en `TRAZA`. El perfil topográfico se reescribió sobre esa base sin cambios visibles.
+→ [Arquitectura frontend](arquitectura-frontend.md)
+
 ## v2.3.0 — Arquitectura modular y reglas de mantenimiento
 
 Se incorpora `AGENTS.md` como regla raíz: lectura obligatoria de `docs/llm-wiki.md` y del índice,

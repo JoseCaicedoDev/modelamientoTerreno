@@ -1,8 +1,11 @@
-import { formatCoordinateLabel } from './js/config.js';
+import { formatCoordinateLabel, UTM_20N } from './js/config.js';
 import { createTerrainModel } from './js/domain/terrain.js';
+import { createGrid } from './js/domain/grid.js';
 import { createTerrainPlot } from './js/adapters/terrain-plot.js';
 import { createSatelliteMap } from './js/adapters/satellite-map.js';
 import { createProfileChart } from './js/ui/profile-chart.js';
+import { createToolController } from './js/ui/tool-controller.js';
+import { createResultPanel } from './js/ui/result-panel.js';
 
 const byId = id => document.getElementById(id);
 
@@ -43,18 +46,27 @@ if (!dependenciesReady) {
 
 function startApplication() {
   const terrain = createTerrainModel(data);
+  const grid = createGrid(data);
   const profileChart = createProfileChart({
     chartElement: elements.profileChart,
     statsElement: elements.profileStats
   });
+  const tools = createToolController();
   let colorMode = 'elevation';
   let contoursVisible = true;
   let cursorClearTimer;
   let lastCursorKey;
 
+  // Anillo de la zona de influencia en UTM: define hasta dónde llega el plano de agua del 3D.
+  const waterRing = data.buffer.map(([latitude, longitude]) => {
+    const [x, y] = window.proj4('EPSG:4326', UTM_20N, [longitude, latitude]);
+    return { x, y };
+  });
+
   const terrainPlot = createTerrainPlot({
     element: elements.plot,
     data,
+    waterRing,
     onHover: (easting, northing) => showSynchronizedCursor(terrain.nearestPoint(easting, northing)),
     onLeave: scheduleCursorClear
   });
@@ -64,9 +76,16 @@ function startApplication() {
     data,
     nearestPoint: terrain.nearestPoint,
     onPointer: showSynchronizedCursor,
-    onPointerLeave: scheduleCursorClear,
-    onProfileState: updateProfileState,
-    onProfileComplete: renderProfile
+    onPointerLeave: scheduleCursorClear
+  });
+
+  const profilePanel = createResultPanel({
+    panel: elements.profilePanel,
+    stats: elements.profileStats,
+    pane: elements.satellitePane,
+    visibleClass: 'profile-visible',
+    closeButton: elements.profileClose,
+    onClose: () => tools.deactivateAll()
   });
 
   function showSynchronizedCursor(point) {
@@ -125,36 +144,31 @@ function startApplication() {
     elements.exaggerationToggle.setAttribute('aria-expanded', String(open));
   }
 
-  function updateProfileState({ active, drawing, instruction }) {
-    elements.profileTool.classList.toggle('active', active);
-    elements.profileTool.setAttribute('aria-pressed', String(active));
-    elements.satellitePane.classList.toggle('profile-drawing', drawing);
-    elements.profileInstruction.textContent = instruction || '';
-    elements.profileInstruction.hidden = !instruction;
-    if (!active || drawing) {
-      elements.profilePanel.hidden = true;
-      elements.satellitePane.classList.remove('profile-visible');
-      if (!active) profileChart.clear();
-    }
+  function setInstruction(text) {
+    elements.profileInstruction.textContent = text || '';
+    elements.profileInstruction.hidden = !text;
   }
 
   function renderProfile(start, end) {
     const profile = terrain.sampleLine(start, end);
     if (!profileChart.render(profile)) return;
-    elements.profilePanel.hidden = false;
-    elements.satellitePane.classList.add('profile-visible');
+    setInstruction(null);
+    profilePanel.show();
   }
 
-  function toggleProfile() {
-    const active = elements.profileTool.getAttribute('aria-pressed') === 'true';
-    if (active) satelliteMap.clearProfile();
-    else satelliteMap.beginProfile();
-  }
-
-  function closeTransientUi() {
-    setExaggerationPanel(false);
-    if (elements.profileTool.getAttribute('aria-pressed') === 'true') satelliteMap.clearProfile();
-  }
+  tools.register('perfil', {
+    button: elements.profileTool,
+    activate: () => satelliteMap.beginProfile({
+      onInstruccion: setInstruction,
+      onFinalizar: renderProfile
+    }),
+    deactivate: () => {
+      satelliteMap.cancelDrawing();
+      setInstruction(null);
+      profilePanel.hide();
+      profileChart.clear();
+    }
+  });
 
   elements.exaggeration.addEventListener('input', () => {
     elements.exaggerationValue.textContent = `${elements.exaggeration.value}×`;
@@ -167,12 +181,15 @@ function startApplication() {
   elements.exaggerationPanel.addEventListener('click', event => event.stopPropagation());
   elements.colorButtons.forEach(button => button.addEventListener('click', () => setColorMode(button.dataset.colorMode)));
   elements.contours.addEventListener('click', toggleContours);
-  elements.profileTool.addEventListener('click', toggleProfile);
-  elements.profileClose.addEventListener('click', () => satelliteMap.clearProfile());
+  elements.profileTool.addEventListener('click', () => tools.toggle('perfil'));
   elements.resetCamera.addEventListener('click', () => terrainPlot.resetCamera());
   document.addEventListener('click', () => setExaggerationPanel(false));
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') closeTransientUi();
+    if (event.key === 'Escape') {
+      setExaggerationPanel(false);
+      tools.deactivateAll();
+    }
+    if (event.key === 'Enter') satelliteMap.finishDrawing();
   });
   window.addEventListener('resize', () => {
     terrainPlot.resize();

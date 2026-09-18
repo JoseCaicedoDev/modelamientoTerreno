@@ -26,6 +26,10 @@ export const INITIAL_CAMERA = Object.freeze({
   center: { x: 0, y: 0, z: -0.08 }
 });
 
+export const WATER_COLOR = '#2488bd';
+
+export const STREAM_COLOR = '#38bdf8';
+
 export const UTM_20N = '+proj=utm +zone=20 +datum=WGS84 +units=m +no_defs';
 
 export const coordinateFormatter = new Intl.NumberFormat('es-CO', {
