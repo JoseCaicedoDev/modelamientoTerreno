@@ -13,4 +13,4 @@ El contenido publicado se encuentra en `dist/` y se despliega automáticamente c
 
 ## Ver en línea
 
-[Abrir el modelo 3D](https://josecaicedodev.github.io/modelamientoTerreno/)
+[Abrir el modelo 3D](https://jose.caicedo.dev/modelamientoTerreno/)
