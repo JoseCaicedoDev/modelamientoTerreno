@@ -1,9 +1,7 @@
 (() => {
   const data = window.TERRAIN_DATA;
-  const viewer = document.querySelector('.viewer');
   const plot = document.getElementById('terrain-plot');
   const satelliteMapElement = document.getElementById('satellite-map');
-  const satelliteLegend = document.getElementById('satellite-legend');
   const sourceLabel = document.getElementById('source-label');
   const loading = document.getElementById('loading');
   const error = document.getElementById('error');
@@ -12,8 +10,6 @@
   const contoursButton = document.getElementById('contours-toggle');
   const resetButton = document.getElementById('reset-camera');
   const colorButtons = [...document.querySelectorAll('[data-color-mode]')];
-  const viewButtons = [...document.querySelectorAll('[data-view-mode]')];
-  const terrainControls = [...document.querySelectorAll('.terrain-only')];
   const touchHint = document.getElementById('touch-hint');
 
   const elevationScale = [
@@ -30,7 +26,6 @@
   let contoursVisible = true;
   let satelliteMap;
   let studyAreaBounds;
-  let viewMode = 'terrain';
 
   function zAspect() {
     return 0.055 * Number(exaggeration.value);
@@ -265,39 +260,10 @@
   }
 
   function updateSourceLabel() {
-    if (viewMode === 'satellite') {
-      sourceLabel.textContent = 'World Imagery · Área Manolo y zona de influencia de 200 m';
-    } else if (colorMode === 'satellite') {
+    if (colorMode === 'satellite') {
       sourceLabel.textContent = 'World Imagery © Esri, Maxar, Earthstar Geographics y GIS User Community · sobre DEM SRTMGL1';
     } else {
       sourceLabel.textContent = 'DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160';
-    }
-  }
-
-  function setViewMode(mode) {
-    viewMode = mode;
-    const showSatellite = mode === 'satellite';
-    plot.hidden = showSatellite;
-    satelliteMapElement.hidden = !showSatellite;
-    satelliteLegend.hidden = !showSatellite;
-    viewer.classList.toggle('satellite-active', showSatellite);
-    terrainControls.forEach(control => { control.hidden = showSatellite; });
-    touchHint.textContent = showSatellite
-      ? 'Arrastra para mover · Pellizca para acercar'
-      : 'Arrastra para rotar · Pellizca para acercar';
-    updateSourceLabel();
-
-    viewButtons.forEach(button => {
-      const active = button.dataset.viewMode === mode;
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
-
-    if (showSatellite) {
-      initializeSatelliteMap();
-      window.requestAnimationFrame(() => satelliteMap?.invalidateSize());
-    } else {
-      window.requestAnimationFrame(() => Plotly.Plots.resize(plot));
     }
   }
 
@@ -310,6 +276,7 @@
   Plotly.newPlot(plot, [surface, satelliteMesh], layout, config)
     .then(() => {
       loading.hidden = true;
+      initializeSatelliteMap();
       if (['elevation', 'satellite'].includes(requestedColorMode)) {
         setColorMode(requestedColorMode);
       }
@@ -322,7 +289,6 @@
   });
 
   colorButtons.forEach(button => button.addEventListener('click', () => setColorMode(button.dataset.colorMode)));
-  viewButtons.forEach(button => button.addEventListener('click', () => setViewMode(button.dataset.viewMode)));
   contoursButton.addEventListener('click', () => setContours(!contoursVisible));
   resetButton.addEventListener('click', () => Plotly.relayout(plot, { 'scene.camera': camera }));
   window.addEventListener('resize', () => {
@@ -330,8 +296,4 @@
     satelliteMap?.invalidateSize();
   });
   window.setTimeout(() => { touchHint.style.opacity = '0'; }, 3600);
-
-  if (new URLSearchParams(window.location.search).get('view') === 'satellite') {
-    setViewMode('satellite');
-  }
 })();

@@ -35,21 +35,27 @@
       </div>
     </header>
 
-    <section class="viewer" aria-label="Visor tridimensional del terreno">
-      <div id="terrain-plot" role="img" aria-label="Superficie tridimensional interactiva del terreno"></div>
-      <div id="satellite-map" role="region" aria-label="Imagen satelital del área Manolo" hidden></div>
+    <section class="viewer" aria-label="Modelo 3D e imagen satelital del terreno">
+      <div class="split-view">
+        <section class="view-pane terrain-pane" aria-label="Modelo tridimensional">
+          <span class="pane-heading">Modelo 3D</span>
+          <div id="terrain-plot" role="img" aria-label="Superficie tridimensional interactiva del terreno"></div>
+          <div id="touch-hint" class="touch-hint">Arrastra para rotar · Pellizca para acercar</div>
+        </section>
+        <section class="view-pane satellite-pane" aria-label="Imagen satelital">
+          <span class="pane-heading">Imagen satelital</span>
+          <div id="satellite-map" role="region" aria-label="Imagen satelital del área Manolo"></div>
+          <div id="satellite-legend" class="map-legend">
+            <p class="map-legend-title">Área de estudio</p>
+            <span><i class="legend-line boundary-line"></i>Levantamiento preliminar</span>
+            <span><i class="legend-line buffer-line"></i>Zona de influencia · 200 m</span>
+          </div>
+        </section>
+      </div>
 
       <aside class="controls" aria-label="Controles del modelo">
         <p class="panel-overline">VISUALIZACIÓN</p>
-        <div class="control-group view-selector">
-          <span class="control-label">Vista</span>
-          <div class="segmented" role="group" aria-label="Tipo de vista">
-            <button class="segmented-button active" data-view-mode="terrain" type="button" aria-pressed="true">Modelo 3D</button>
-            <button class="segmented-button" data-view-mode="satellite" type="button" aria-pressed="false">Satélite</button>
-          </div>
-        </div>
-
-        <div class="control-group terrain-only">
+        <div class="control-group">
           <span class="control-label">Coloración</span>
           <div class="segmented" role="group" aria-label="Coloración de la superficie">
             <button class="segmented-button active" data-color-mode="elevation" type="button">Elevación</button>
@@ -57,28 +63,21 @@
           </div>
         </div>
 
-        <div class="control-group terrain-only">
+        <div class="control-group">
           <label class="control-label" for="exaggeration">Exageración vertical <output id="exaggeration-value">2×</output></label>
           <input id="exaggeration" type="range" min="1" max="10" step="1" value="2">
         </div>
 
-        <div class="button-row terrain-only">
+        <div class="button-row">
           <button id="contours-toggle" class="utility-button active" type="button" aria-pressed="true">Curvas 10 m</button>
           <button id="reset-camera" class="utility-button" type="button">Restablecer vista</button>
         </div>
       </aside>
 
-      <div id="satellite-legend" class="map-legend" hidden>
-        <p class="map-legend-title">Área de estudio</p>
-        <span><i class="legend-line boundary-line"></i>Levantamiento preliminar</span>
-        <span><i class="legend-line buffer-line"></i>Zona de influencia · 200 m</span>
-      </div>
-
       <div class="viewer-meta">
         <span id="source-label">DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160</span>
         <span>Gestiagro © 2026 · Sistema v2.2.0</span>
       </div>
-      <div id="touch-hint" class="touch-hint">Arrastra para rotar · Pellizca para acercar</div>
       <div id="loading" class="loading" aria-live="polite">
         <div class="loading-mark"></div>
         <span>Preparando terreno 3D…</span>

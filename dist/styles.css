@@ -152,6 +152,22 @@ h1 {
   background: var(--gray-950);
 }
 
+.split-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+}
+
+.view-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.terrain-pane { border-right: 1px solid var(--gray-700); }
+
 #terrain-plot { width: 100%; height: 100%; }
 
 #satellite-map {
@@ -162,6 +178,28 @@ h1 {
 }
 
 [hidden] { display: none !important; }
+
+.pane-heading {
+  position: absolute;
+  z-index: 850;
+  top: 18px;
+  right: 18px;
+  padding: 7px 11px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.88);
+  color: var(--gray-300);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.satellite-pane .pane-heading {
+  right: auto;
+  left: 18px;
+}
 
 .controls {
   position: absolute;
@@ -183,16 +221,6 @@ h1 {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
-}
-
-.view-selector {
-  padding-bottom: 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.satellite-active .view-selector {
-  padding-bottom: 0;
-  border-bottom: 0;
 }
 
 .control-group + .control-group { margin-top: 16px; }
@@ -419,7 +447,7 @@ input[type="range"] {
   .map-legend { left: 10px; bottom: 18px; min-width: 220px; padding: 11px 13px; }
 }
 
-/* Móvil: los controles dejan de flotar sobre el mapa y pasan a una barra inferior. */
+/* Móvil: vistas apiladas y controles en una barra inferior compacta. */
 @media (max-width: 760px) {
   .viewer {
     display: grid;
@@ -427,12 +455,21 @@ input[type="range"] {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  #terrain-plot,
-  #satellite-map {
+  .split-view {
     grid-row: 1;
     grid-column: 1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     min-height: 0;
   }
+
+  .terrain-pane {
+    border-right: 0;
+    border-bottom: 1px solid var(--gray-700);
+  }
+
+  .pane-heading { top: 10px; right: 10px; }
+  .satellite-pane .pane-heading { right: 10px; left: auto; }
 
   .controls {
     position: static;
@@ -440,7 +477,7 @@ input[type="range"] {
     grid-row: 2;
     grid-column: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 9px 10px;
     width: auto;
     min-width: 0;
@@ -453,23 +490,9 @@ input[type="range"] {
   }
 
   .panel-overline { display: none; }
-
+  .controls > * { min-width: 0; }
   .control-group + .control-group { margin-top: 0; }
-
-  .view-selector {
-    grid-column: 1;
-    padding-bottom: 0;
-    border-bottom: 0;
-  }
-
-  .controls .control-group:not(.view-selector) { grid-column: 2; }
-
-  .satellite-active .view-selector { grid-column: 1 / -1; }
-
-  .control-group.terrain-only + .control-group.terrain-only,
-  .button-row {
-    grid-column: 1 / -1;
-  }
+  .button-row { grid-column: 1 / -1; margin-top: 0; }
 
   .control-label {
     display: flex;
@@ -480,32 +503,29 @@ input[type="range"] {
 
   .segmented-button,
   .utility-button {
+    min-width: 0;
     min-height: 42px;
     padding: 6px 4px;
     font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-
-  .button-row { margin-top: 0; }
 
   input[type="range"] { margin: 2px 0 0; }
 
-  /* Fuera del flujo: se reubican para no quedar bajo la barra de controles. */
   .map-legend {
-    top: 12px;
+    top: 42px;
+    right: 10px;
     bottom: auto;
-    left: 10px;
+    left: auto;
+    width: min(230px, calc(100% - 20px));
     min-width: 0;
   }
 
-  /* El aviso pasa a ser un elemento de la celda del mapa: nunca tapa la barra inferior. */
   .touch-hint {
-    position: static;
-    grid-row: 1;
-    grid-column: 1;
-    align-self: end;
-    justify-self: center;
-    transform: none;
-    margin-bottom: 12px;
+    bottom: 10px;
+    margin: 0;
     font-size: 11px;
   }
 }
