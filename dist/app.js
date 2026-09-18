@@ -12,6 +12,12 @@
   const exaggerationToggle = document.getElementById('exaggeration-toggle');
   const exaggerationPanel = document.getElementById('exaggeration-panel');
   const contoursButton = document.getElementById('contours-toggle');
+  const profileTool = document.getElementById('profile-tool');
+  const profileInstruction = document.getElementById('profile-instruction');
+  const profilePanel = document.getElementById('profile-panel');
+  const profileChart = document.getElementById('profile-chart');
+  const profileStats = document.getElementById('profile-stats');
+  const profileClose = document.getElementById('profile-close');
   const resetButton = document.getElementById('reset-camera');
   const colorButtons = [...document.querySelectorAll('[data-color-mode]')];
   const touchHint = document.getElementById('touch-hint');
@@ -33,6 +39,10 @@
   let mapCursorMarker;
   let cursorClearTimer;
   let lastCursorKey;
+  let profileLayerGroup;
+  let profilePreviewLine;
+  let profileDrawing = false;
+  let profilePoints = [];
 
   function zAspect() {
     return 0.055 * Number(exaggeration.value);
@@ -292,6 +302,177 @@
     cursorClearTimer = window.setTimeout(clearSynchronizedCursor, 60);
   }
 
+  function profilePointFromLatLng(latlng) {
+    const [easting, northing] = proj4('EPSG:4326', utm20n, [latlng.lng, latlng.lat]);
+    const terrainPoint = nearestTerrainPoint(easting, northing);
+    if (!terrainPoint) return null;
+    const [longitude, latitude] = proj4(utm20n, 'EPSG:4326', [terrainPoint.x, terrainPoint.y]);
+    return { ...terrainPoint, latlng: L.latLng(latitude, longitude) };
+  }
+
+  function formatProfileDistance(distance) {
+    return distance >= 1000
+      ? `${(distance / 1000).toLocaleString('es-CO', { maximumFractionDigits: 2 })} km`
+      : `${Math.round(distance).toLocaleString('es-CO')} m`;
+  }
+
+  function svgElement(name, attributes = {}, text = '') {
+    const element = document.createElementNS('http://www.w3.org/2000/svg', name);
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+    if (text) element.textContent = text;
+    return element;
+  }
+
+  function renderProfile(samples, totalDistance) {
+    const elevations = samples.map(sample => sample.z);
+    const minimum = Math.min(...elevations);
+    const maximum = Math.max(...elevations);
+    const zMin = Math.floor(minimum - 2);
+    const zMax = Math.ceil(maximum + 2) || zMin + 1;
+    const width = 640;
+    const height = 210;
+    const padding = { left: 52, right: 15, top: 12, bottom: 34 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+    const xScale = distance => padding.left + (distance / totalDistance) * chartWidth;
+    const yScale = elevation => padding.top + ((zMax - elevation) / (zMax - zMin)) * chartHeight;
+    profileChart.replaceChildren();
+
+    for (let index = 0; index <= 4; index += 1) {
+      const elevation = zMin + ((zMax - zMin) * index) / 4;
+      const y = yScale(elevation);
+      profileChart.append(
+        svgElement('line', { x1: padding.left, y1: y, x2: width - padding.right, y2: y, stroke: 'rgba(148,163,184,0.2)', 'stroke-width': 1 }),
+        svgElement('text', { x: padding.left - 8, y: y + 4, fill: '#94a3b8', 'font-size': 10, 'text-anchor': 'end' }, elevation.toFixed(0))
+      );
+    }
+
+    for (let index = 0; index <= 4; index += 1) {
+      const distance = (totalDistance * index) / 4;
+      const x = xScale(distance);
+      profileChart.append(
+        svgElement('line', { x1: x, y1: padding.top, x2: x, y2: height - padding.bottom, stroke: 'rgba(148,163,184,0.12)', 'stroke-width': 1 }),
+        svgElement('text', { x, y: height - 12, fill: '#94a3b8', 'font-size': 10, 'text-anchor': 'middle' }, formatProfileDistance(distance))
+      );
+    }
+
+    const profilePath = samples.map((sample, index) => `${index ? 'L' : 'M'} ${xScale(sample.distance).toFixed(2)} ${yScale(sample.z).toFixed(2)}`).join(' ');
+    const baseline = height - padding.bottom;
+    const areaPath = `${profilePath} L ${xScale(totalDistance)} ${baseline} L ${padding.left} ${baseline} Z`;
+    profileChart.append(
+      svgElement('path', { d: areaPath, fill: 'rgba(0,203,169,0.18)' }),
+      svgElement('path', { d: profilePath, fill: 'none', stroke: '#00cba9', 'stroke-width': 4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }),
+      svgElement('circle', { cx: xScale(0), cy: yScale(samples[0].z), r: 5, fill: '#f4b860', stroke: '#ffffff', 'stroke-width': 2 }),
+      svgElement('circle', { cx: xScale(totalDistance), cy: yScale(samples.at(-1).z), r: 5, fill: '#f4b860', stroke: '#ffffff', 'stroke-width': 2 }),
+      svgElement('text', { x: 14, y: height / 2, fill: '#cbd5e1', 'font-size': 10, 'text-anchor': 'middle', transform: `rotate(-90 14 ${height / 2})` }, 'Elevación (m.s.n.m.)')
+    );
+
+    const stats = [
+      ['Distancia', formatProfileDistance(totalDistance)],
+      ['Elevación mín.', `${coordinateFormatter.format(minimum)} m`],
+      ['Elevación máx.', `${coordinateFormatter.format(maximum)} m`],
+      ['Desnivel', `${coordinateFormatter.format(maximum - minimum)} m`]
+    ];
+    profileStats.replaceChildren(...stats.map(([label, value]) => {
+      const item = document.createElement('div');
+      item.className = 'profile-stat';
+      const name = document.createElement('span');
+      const result = document.createElement('strong');
+      name.textContent = label;
+      result.textContent = value;
+      item.append(name, result);
+      return item;
+    }));
+
+    profilePanel.hidden = false;
+    satelliteMapElement.closest('.satellite-pane').classList.add('profile-visible');
+  }
+
+  function sampleProfile(start, end) {
+    const totalDistance = Math.hypot(end.x - start.x, end.y - start.y);
+    const sampleCount = Math.min(240, Math.max(2, Math.ceil(totalDistance / 30) + 1));
+    const samples = [];
+    for (let index = 0; index < sampleCount; index += 1) {
+      const progress = index / (sampleCount - 1);
+      const point = nearestTerrainPoint(
+        start.x + (end.x - start.x) * progress,
+        start.y + (end.y - start.y) * progress
+      );
+      if (point) samples.push({ ...point, distance: totalDistance * progress });
+    }
+    if (samples.length > 1 && totalDistance > 0) renderProfile(samples, totalDistance);
+  }
+
+  function clearProfile() {
+    profileDrawing = false;
+    profilePoints = [];
+    profilePreviewLine = null;
+    profileLayerGroup?.clearLayers();
+    profileInstruction.hidden = true;
+    profilePanel.hidden = true;
+    profileTool.classList.remove('active');
+    profileTool.setAttribute('aria-pressed', 'false');
+    const pane = satelliteMapElement.closest('.satellite-pane');
+    pane.classList.remove('profile-drawing', 'profile-visible');
+  }
+
+  function beginProfile() {
+    if (!satelliteMap || !profileLayerGroup) return;
+    clearProfile();
+    profileDrawing = true;
+    profileTool.classList.add('active');
+    profileTool.setAttribute('aria-pressed', 'true');
+    profileInstruction.textContent = 'Selecciona el punto inicial del perfil';
+    profileInstruction.hidden = false;
+    satelliteMapElement.closest('.satellite-pane').classList.add('profile-drawing');
+  }
+
+  function handleProfileClick(event) {
+    if (!profileDrawing) return;
+    const point = profilePointFromLatLng(event.latlng);
+    if (!point) {
+      profileInstruction.textContent = 'Selecciona un punto dentro del terreno';
+      return;
+    }
+    if (profilePoints.length === 1 && Math.hypot(point.x - profilePoints[0].x, point.y - profilePoints[0].y) < 30) {
+      profileInstruction.textContent = 'Selecciona un punto final a más de 30 m';
+      return;
+    }
+
+    profilePoints.push(point);
+    L.circleMarker(point.latlng, {
+      radius: 7,
+      color: '#ffffff',
+      weight: 2,
+      fillColor: '#f4b860',
+      fillOpacity: 1,
+      className: 'profile-point-marker',
+      interactive: false
+    }).bindTooltip(profilePoints.length === 1 ? 'A' : 'B', {
+      permanent: true,
+      direction: 'top',
+      className: 'profile-map-label'
+    }).addTo(profileLayerGroup);
+
+    if (profilePoints.length === 1) {
+      profileInstruction.textContent = 'Selecciona el punto final del perfil';
+      profilePreviewLine = L.polyline([point.latlng, point.latlng], {
+        color: '#f4b860',
+        weight: 3,
+        dashArray: '7 6',
+        interactive: false
+      }).addTo(profileLayerGroup);
+      return;
+    }
+
+    profilePreviewLine.setLatLngs(profilePoints.map(profilePoint => profilePoint.latlng));
+    profilePreviewLine.setStyle({ weight: 4, dashArray: null });
+    profileDrawing = false;
+    profileInstruction.hidden = true;
+    satelliteMapElement.closest('.satellite-pane').classList.remove('profile-drawing');
+    sampleProfile(profilePoints[0], profilePoints[1]);
+  }
+
   function setColorMode(mode) {
     colorMode = mode;
     const satellite = mode === 'satellite';
@@ -327,6 +508,7 @@
       zoomControl: false,
       attributionControl: true
     });
+    profileLayerGroup = L.layerGroup().addTo(satelliteMap);
 
     L.control.zoom({ position: 'topright' }).addTo(satelliteMap);
     addResetAreaControl();
@@ -361,7 +543,11 @@
     satelliteMap.on('mousemove', event => {
       const [easting, northing] = proj4('EPSG:4326', utm20n, [event.latlng.lng, event.latlng.lat]);
       showSynchronizedCursor(nearestTerrainPoint(easting, northing));
+      if (profileDrawing && profilePoints.length === 1 && profilePreviewLine) {
+        profilePreviewLine.setLatLngs([profilePoints[0].latlng, event.latlng]);
+      }
     });
+    satelliteMap.on('click', handleProfileClick);
     satelliteMapElement.addEventListener('mouseleave', scheduleSynchronizedCursorClear);
   }
 
@@ -438,11 +624,19 @@
   exaggerationPanel.addEventListener('click', event => event.stopPropagation());
   document.addEventListener('click', () => setExaggerationPanel(false));
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') setExaggerationPanel(false);
+    if (event.key === 'Escape') {
+      setExaggerationPanel(false);
+      if (profileDrawing || !profilePanel.hidden) clearProfile();
+    }
   });
 
   colorButtons.forEach(button => button.addEventListener('click', () => setColorMode(button.dataset.colorMode)));
   contoursButton.addEventListener('click', () => setContours(!contoursVisible));
+  profileTool.addEventListener('click', () => {
+    if (profileTool.getAttribute('aria-pressed') === 'true') clearProfile();
+    else beginProfile();
+  });
+  profileClose.addEventListener('click', clearProfile);
   resetButton.addEventListener('click', () => Plotly.relayout(plot, { 'scene.camera': camera }));
   window.addEventListener('resize', () => {
     Plotly.Plots.resize(plot);
