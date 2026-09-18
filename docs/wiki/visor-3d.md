@@ -1,70 +1,52 @@
 # Visor 3D
 
-[`dist/app.js`](../../dist/app.js) — 309 líneas dentro de una IIFE, sin módulos ni framework.
-El estado vive en tres variables: `colorMode`, `viewMode` y `contoursVisible`.
+La escena se encapsula en
+[`dist/js/adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js). El módulo no busca
+elementos del DOM ni administra botones: recibe el contenedor y los datos, crea Plotly y expone
+operaciones (`setColorMode`, `setContours`, `setExaggeration`, `resetCamera`, `showCursor`,
+`clearCursor` y `resize`).
 
-## Las dos trazas
+## Trazas
 
-Plotly se inicializa con **dos** trazas sobre la misma escena
-([`app.js:282`](../../dist/app.js#L282)) y se alterna su visibilidad:
+Plotly se inicializa con tres trazas:
 
-| Índice | Tipo | Se usa para |
+| Índice | Tipo | Uso |
 | --- | --- | --- |
-| 0 | `surface` | Coloración por **elevación** |
-| 1 | `mesh3d` | Coloración **satelital** |
+| 0 | `surface` | Superficie coloreada por elevación y curvas cada 10 m |
+| 1 | `mesh3d` | Textura satelital horneada como color por vértice |
+| 2 | `scatter3d` | Baliza sincronizada con el cursor del mapa |
 
-La razón de la segunda traza: Plotly no puede pintar una imagen sobre una `surface`, así que
-`buildSatelliteMesh` ([`app.js:76-126`](../../dist/app.js#L76-L126)) convierte la malla en una
-triangulación con color por vértice. Recorre la matriz, salta las celdas `null`, guarda el índice
-de cada vértice creado y luego emite dos triángulos por cada cuadro cuyos cuatro vértices existen.
-Su iluminación es casi plana (`ambient: 0.88`, `specular: 0.02`) para que la textura satelital se
-lea como imagen y no como material brillante.
+La triangulación de la segunda traza se calcula en la función pura `buildSatelliteMeshData` de
+[`dist/js/domain/terrain.js`](../../dist/js/domain/terrain.js). Solo se emiten triángulos cuando
+los cuatro vértices de la celda contienen elevación válida.
 
-## Coloración
+## Coloración y curvas
 
-Dos modos, conmutados por `setColorMode` ([`app.js:174-194`](../../dist/app.js#L174-L194)):
+La coloración **Elevación** muestra la traza `surface`, su escala altimétrica y las curvas. La
+coloración **Satélite** muestra la `mesh3d`; el orquestador deshabilita el botón de curvas porque
+esa propiedad pertenece exclusivamente a la superficie.
 
-- **Elevación** — traza 0, rampa de 7 paradas de azul profundo a blanco hueso, `cmin`/`cmax` = 0/55,
-  barra de color visible.
-- **Satélite** — oculta la `surface`, muestra la `mesh3d`, y **deshabilita el botón de curvas**
-  (con `title` explicativo, porque las curvas pertenecen a la traza 0).
+La paleta, cámara y colores compartidos se centralizan en
+[`dist/js/config.js`](../../dist/js/config.js). El adaptador conserva únicamente valores propios de
+Plotly, como iluminación, ejes y plantilla del tooltip.
 
-Al volver de satélite a elevación la traza 0 se reestiliza entera en una sola llamada
-`Plotly.restyle`, aunque hoy siempre recibe los mismos valores: ese bloque quedó preparado para
-más de una coloración sobre la superficie.
+## Escena
 
-El texto de atribución al pie cambia con el modo vía `updateSourceLabel`.
+La cámara inicial mira desde el sureste (`eye: {x: 1.34, y: -1.5, z: 0.78}`). La relación XY usa
+`data.aspectY`; Z se calcula como `0.055 × exageración`, con valor inicial de 2×. Los ejes muestran
+Este y Norte UTM en metros y elevación en m.s.n.m.
 
-## Controles
+## Seguimiento sincronizado
 
-| Control | Efecto |
-| --- | --- |
-| Vista (Modelo 3D / Satélite) | `setViewMode` — alterna Plotly ↔ Leaflet, oculta los controles `.terrain-only` |
-| Coloración (Elevación / Satélite) | `setColorMode` |
-| Exageración vertical (1–10, por defecto **2×**) | `scene.aspectratio.z = 0.055 × valor`, por `Plotly.relayout` |
-| Curvas 10 m | `contours.z.show` y su proyección sobre la base |
-| Restablecer vista | Devuelve `scene.camera` al objeto `camera` inicial |
+Cuando Plotly emite `plotly_hover`, el adaptador entrega las coordenadas al orquestador. Este busca
+la celda válida más cercana mediante `terrain.nearestPoint`, actualiza la baliza 3D, mueve el punto
+Leaflet y muestra la misma lectura en ambas vistas.
 
-Las curvas van de 0 a 60 m cada 10 m, proyectadas también sobre el plano inferior
-(`project: { z: true }`), lo que dibuja el plano de curvas bajo el terreno.
+La baliza es una línea vertical turquesa con dos marcadores del mismo color y borde blanco. La
+elevación superior está 8 m sobre la celda para mantenerse visible desde distintos ángulos.
 
-## Cámara y escena
+## Ciclo de vida y errores
 
-Posición inicial `eye: {1.34, -1.5, 0.78}`, mirando ligeramente por debajo del centro
-(`center.z: -0.08`): una vista desde el sureste. `aspectmode: 'manual'` con `x: 1`,
-`y: data.aspectY` y `z` según el deslizador (0,11 con el valor inicial de 2×); sin esto Plotly normalizaría los ejes y el relieve
-aparecería deformado. El eje Z se fija a `[-2, 58]`, derivado de `minElevation`/`maxElevation`.
-
-Los tooltips muestran Este/Norte UTM y elevación con `hovertemplate`, idénticos en ambas trazas.
-
-## Parámetros de URL
-
-- `?color=elevation|satellite` — coloración inicial, aplicada tras el primer render.
-- `?view=satellite` — arranca en la vista de mapa.
-
-## Ciclo de vida
-
-Si falta `Plotly` o `window.TERRAIN_DATA`, se oculta el cargador y se muestra el mensaje de error
-([`app.js:276-280`](../../dist/app.js#L276-L280)); el `.catch` del `newPlot` hace lo mismo si el
-render falla. El aviso táctil se desvanece a los 3,6 s. En `resize` se redimensionan tanto Plotly
-como el mapa Leaflet.
+[`dist/app.js`](../../dist/app.js) valida Plotly, Leaflet, Proj4 y `window.TERRAIN_DATA` antes de
+crear los módulos. Inicializa primero la escena y después el mapa. Una excepción oculta el cargador,
+muestra el mensaje de error y se registra en la consola. En `resize` se redimensionan las dos vistas.

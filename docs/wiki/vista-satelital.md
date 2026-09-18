@@ -1,54 +1,47 @@
 # Vista satelital
 
-Segunda vista del visor, en 2D, construida con Leaflet 1.9.4.
-Código: `initializeSatelliteMap` y `setViewMode` en
-[`app.js:202-274`](../../dist/app.js#L202-L274).
+La mitad derecha del visor es un mapa Leaflet 1.9.4 encapsulado en
+[`dist/js/adapters/satellite-map.js`](../../dist/js/adapters/satellite-map.js). Se inicializa al
+terminar la escena 3D y permanece visible en paralelo con ella.
 
-## Inicialización perezosa
-
-El mapa **no se crea al cargar la página**: se construye la primera vez que se pulsa "Satélite"
-y a partir de ahí se reutiliza (`if (satelliteMap || !window.L || !data.boundary …) return`). Al
-mostrarlo se llama `invalidateSize()` dentro de un `requestAnimationFrame`, porque el contenedor
-estaba `hidden` y Leaflet necesita medirlo ya visible.
-
-## Capas
+## Capas y controles
 
 | Capa | Estilo | Origen |
 | --- | --- | --- |
-| Teselas base | `maxZoom: 19` | Esri **World Imagery** (`server.arcgisonline.com/.../World_Imagery/MapServer/tile/{z}/{y}/{x}`) |
-| Zona de influencia | línea `#0396a6` de 2 px, discontinua `8 7`, relleno 8 % | `data.buffer` |
-| Área de estudio | línea `#00cba9` de 3 px, relleno 12 % | `data.boundary` |
+| Teselas base | `maxZoom: 19` | Esri World Imagery |
+| Zona de influencia | línea azul discontinua y relleno al 8 % | `data.buffer` |
+| Área de estudio | línea turquesa y relleno al 12 % | `data.boundary` |
 
-Controles añadidos: zoom arriba a la derecha, **volver al área de estudio** justo debajo, y escala
-métrica (`imperial: false`) abajo a la izquierda. La atribución de Esri se mantiene activa, como
-exige el servicio.
+El mapa incluye zoom arriba a la derecha, reencuadre del área debajo y escala métrica abajo a la
+izquierda. `fitStudyArea` encuadra el buffer con 34 px de margen. La atribución de Esri, Maxar,
+Earthstar Geographics y GIS User Community permanece visible.
 
-El encuadre inicial es `fitBounds` sobre el polígono del buffer con 34 px de margen — nunca se fija
-un centro o zoom a mano, así que el mapa sigue automáticamente cualquier cambio del área.
+## Coordenadas y sincronización
 
-## Volver al área de estudio
+Proj4 transforma el movimiento del puntero desde WGS 84 a EPSG:32620. El adaptador entrega el punto
+al orquestador y recibe de vuelta la celda DEM ajustada. Esa celda se representa con un círculo
+turquesa de borde blanco y, simultáneamente, con la baliza de la escena 3D.
 
-`addResetAreaControl` construye un control Leaflet propio (`L.control` con `onAdd`) con las clases
-`leaflet-bar leaflet-control map-reset`, de modo que hereda el aspecto de los botones de zoom y se
-apila bajo ellos. Su icono es un SVG en línea (marco con retícula) que hereda `currentColor`.
+La transformación inversa UTM → WGS 84 posiciona el marcador Leaflet. Las dos vistas muestran la
+misma etiqueta con Este, Norte y elevación.
 
-Al pulsarlo llama a `fitStudyArea`, la misma función que hace el encuadre inicial, sobre
-`studyAreaBounds` — los límites del polígono del buffer, guardados al crear la capa. `L.DomEvent.stop`
-evita que el clic navegue al `#` del enlace y `disableClickPropagation` impide que llegue al mapa
-como un clic de navegación.
+## Perfil topográfico
 
-## Diferencias con la coloración "Satélite" del 3D
+El botón de perfil pertenece visualmente al mapa. Al activarlo:
 
-Son cosas distintas y conviene no confundirlas:
+1. El cursor cambia a retícula y se solicita el punto inicial A.
+2. El movimiento dibuja una previsualización discontinua.
+3. Un segundo clic, al menos a 30 m, fija el punto B y la línea continua.
+4. `terrain.sampleLine` toma una muestra aproximadamente cada 30 m, con un máximo de 240.
+5. [`dist/js/ui/profile-chart.js`](../../dist/js/ui/profile-chart.js) dibuja el SVG y presenta
+   distancia, elevación mínima, máxima y desnivel.
 
-- **Vista Satélite** (este documento): mapa 2D, teselas en vivo de Esri, permite acercarse hasta
-  z19, requiere conexión.
-- **Coloración Satélite** del modelo 3D: la textura *ya horneada* en `terrain-data.js`, un color por
-  celda de 25 m, drapeada sobre el relieve. Funciona sin conexión y no gana detalle al acercarse.
-  Ver [Visor 3D](visor-3d.md).
+La captura y las capas A–B pertenecen al adaptador Leaflet; el muestreo pertenece al dominio; el
+gráfico solo representa resultados. Cerrar el panel, pulsar de nuevo el botón o presionar `Esc`
+limpia la línea y sus marcadores.
 
-## Cambios de interfaz al activarla
+## Diferencia entre las dos imágenes satelitales
 
-`setViewMode('satellite')` oculta el contenedor de Plotly, muestra el mapa y su leyenda, añade la
-clase `satellite-active` al visor, oculta todos los controles `.terrain-only` (coloración,
-exageración, curvas, restablecer), y cambia el aviso táctil a "Arrastra para mover".
+- El mapa 2D usa teselas en vivo y permite acercamiento hasta nivel 19.
+- La coloración satelital del modelo 3D usa colores almacenados en `terrain-data.js`; no gana
+  detalle al acercarse y puede funcionar una vez cargados los archivos estáticos.

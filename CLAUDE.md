@@ -5,15 +5,18 @@ paquetes, sin build: `dist/` se edita a mano y GitHub Pages lo publica tal cual.
 
 ## Antes de trabajar
 
-Lee [`docs/wiki/index.md`](docs/wiki/index.md). La wiki describe lo que está implementado y evita
-releer todo el código en cada sesión.
+Las reglas canónicas están en [`AGENTS.md`](AGENTS.md). Antes de cualquier cambio es obligatorio
+leer [`docs/llm-wiki.md`](docs/llm-wiki.md), [`docs/wiki/index.md`](docs/wiki/index.md) y las páginas
+temáticas relacionadas. La wiki se actualiza dentro del mismo cambio.
 
 ## Estructura
 
 | Ruta | Qué es |
 | --- | --- |
 | `dist/` | El sitio publicado: `index.html`, `app.js`, `styles.css`, `terrain-data.js`, `assets/` |
+| `dist/js/` | Módulos ES: configuración, dominio, adaptadores Plotly/Leaflet y componentes UI |
 | `scripts/build_terrain_data.py` | Canal de datos manual que genera `dist/terrain-data.js` |
+| `tests/` | Pruebas del dominio geoespacial con `node:test` |
 | `docs/wiki/` | Base de conocimiento del proyecto |
 | `docs/llm-wiki.md` | El patrón con el que se mantiene la wiki |
 | `.github/workflows/` | Publicación en GitHub Pages |

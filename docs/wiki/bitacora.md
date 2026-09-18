@@ -2,6 +2,32 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## v2.3.0 — Arquitectura modular y reglas de mantenimiento
+
+Se incorpora `AGENTS.md` como regla raíz: lectura obligatoria de `docs/llm-wiki.md` y del índice,
+actualización de la wiki en cada cambio y límites de arquitectura. La IIFE monolítica se divide en
+configuración, dominio geoespacial, adaptadores Plotly/Leaflet y componente SVG. `app.js` queda como
+raíz de composición. Se añaden tres pruebas del dominio con `node:test`.
+→ [Arquitectura frontend](arquitectura-frontend.md)
+
+## `5e5aee9`–`73f432f` — Perfil topográfico
+
+Herramienta A–B dentro del mapa satelital: línea de previsualización, muestreo del DEM, gráfico SVG,
+distancia, elevaciones extremas y desnivel. El botón se trasladó desde la barra 3D al propio mapa.
+→ [Vista satelital](vista-satelital.md)
+
+## `909d35a`–`8c01215` — Vista dividida y seguimiento sincronizado
+
+El modelo 3D y la imagen satelital pasan a mostrarse simultáneamente en mitades. El puntero se
+sincroniza en ambos sentidos mediante transformaciones WGS 84 ↔ EPSG:32620 y una celda DEM común.
+→ [Visor 3D](visor-3d.md), [Vista satelital](vista-satelital.md)
+
+## `33a5078`–`c28ae16` — Interfaz compacta
+
+El panel grande se sustituye por botones flotantes, se compacta y reorganiza la cabecera, se corrige
+la cobertura completa del mapa y se ajustan las proporciones de la marca Gestiagro.
+→ [Interfaz y marca](interfaz-y-marca.md)
+
 ## Sin commitear — Exageración vertical por defecto de 2×
 
 El deslizador arranca en 2× en lugar de 5× (`value` y `<output>` en `index.html`); el relieve se

@@ -1,43 +1,37 @@
 # Pendientes y discrepancias
 
-Observaciones sobre el estado actual del código. No son fallos que rompan el visor; son cosas que
-alguien que retome el proyecto debería conocer.
+Observaciones verificadas que siguen abiertas después de la modularización v2.3.0.
 
 ## Datos
 
-- **La escala de elevación no cubre los datos reales.** `minElevation`/`maxElevation` están fijados
-  a 0 y 55 ([`build_terrain_data.py:84-85`](../../scripts/build_terrain_data.py#L84-L85)),
-  mientras el terreno va de **-9,4 a 53,2 m.s.n.m.**. Las celdas bajo 0 m se saturan en el color
-  inferior de la rampa y el eje Z arranca en -2. Decidir si el recorte es intencional (ruido del
-  DEM cerca del agua) o si la escala debe seguir a los datos.
-- **La cabecera dice "0-54 m.s.n.m."** ([`index.html:32`](../../dist/index.html#L32)), un tercer
-  valor que no coincide ni con la escala ni con el dato real.
-- **`actualMinElevation` y `actualMaxElevation` no los lee nadie.** Se publican en el payload pero
-  `app.js` nunca los usa.
-- **"30 m de resolución nominal"** en la cabecera se refiere al origen SRTMGL1; la malla publicada
-  tiene celdas de **25 m**. Es correcto pero se presta a confusión.
+- `minElevation`/`maxElevation` se fijan en 0 y 55 en
+  [`scripts/build_terrain_data.py`](../../scripts/build_terrain_data.py), mientras el payload también
+  informa valores reales cercanos a -9,4 y 53,2 m.s.n.m. Las elevaciones negativas se saturan en el
+  color inferior. Falta decidir si es una exclusión intencional del ruido próximo al agua.
+- La cabecera resume `0-54 m.s.n.m.`, valor editorial que no coincide exactamente con ninguna de las
+  parejas anteriores.
+- La cabecera indica 30 m de resolución por el origen SRTMGL1, aunque la malla publicada queda en
+  aproximadamente 25 m después del submuestreo del producto RTC. Conviene explicar esta diferencia
+  al usuario o unificar el indicador.
 
 ## Reproducibilidad
 
-- El DEM de entrada vive fuera del repositorio y no está documentado dónde obtenerlo más allá del
-  identificador del producto (`ALPSRP274680160`). Sin esos archivos el canal de datos no se puede
-  re-ejecutar.
-- `satellite-texture.jpg` se consume pero **no se genera** con el script; el procedimiento para
-  recrearla no está registrado en ninguna parte del repositorio.
-- No hay `requirements.txt` ni versiones fijadas para las dependencias de Python.
-
-## Estado del árbol de trabajo
-
-**Sin commitear**: el botón de "volver al área de estudio" (`app.js`, `styles.css`) y la
-exageración vertical por defecto de 2× (`index.html`).
+- El DEM de entrada vive fuera del repositorio y falta documentar una fuente de descarga reproducible.
+- `satellite-texture.jpg` se consume pero su proceso de generación no está automatizado ni documentado.
+- No existe `requirements.txt` con versiones fijadas para el canal Python.
 
 ## Frontend
 
-- **Los logos pesan 2,8 MB combinados** para mostrarse a 110 px. Redimensionarlos es la mejora de
-  rendimiento más grande y más barata del proyecto.
-- `setColorMode` conserva un `Plotly.restyle` que reestiliza la traza 0 con valores siempre
-  idénticos: resto de cuando existían dos coloraciones sobre la superficie.
-- La paleta de la escena Plotly está duplicada como literales en `app.js` en vez de leer los tokens
-  CSS; un cambio de marca exige tocar dos archivos.
-- Las dependencias de CDN no llevan `integrity`/SRI.
-- No hay pruebas de ningún tipo, ni verificación en el workflow.
+- Los logos PNG pesan varios megabytes para el tamaño en que se muestran; deben optimizarse.
+- Las dependencias CDN no incluyen atributos SRI.
+- El núcleo geoespacial tiene pruebas con `node:test`, pero las integraciones Plotly/Leaflet todavía
+  se validan mediante navegador y no forman parte del workflow de GitHub Actions.
+- `terrain-data.js` sigue exponiendo un global porque es una salida generada. Migrarlo a módulo
+  requeriría coordinar el script Python y la carga inicial.
+
+## Resuelto en v2.3.0
+
+- `app.js` dejó de concentrar dominio, Plotly, Leaflet, SVG y eventos en una única IIFE.
+- Los colores usados por JavaScript se centralizaron en `dist/js/config.js`.
+- La búsqueda espacial, el muestreo del perfil y la triangulación ahora son funciones puras probadas.
+- La wiki dejó de describir la antigua interfaz por pestañas y documenta la vista dividida actual.

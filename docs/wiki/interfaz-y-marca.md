@@ -1,79 +1,61 @@
 # Interfaz y marca
 
-## Estructura de la página
+## Estructura
 
-[`dist/index.html`](../../dist/index.html) — 96 líneas, en español (`lang="es"`), con una sola
-región `main.app-shell` en rejilla de dos filas: cabecera y visor.
+[`dist/index.html`](../../dist/index.html) contiene una cabecera compacta y un visor dividido en dos
+columnas iguales:
 
-- **`.topbar`** — logo Gestiagro, nombre, descriptor, insignia "MANOLO", título, rótulo del CRS y
-  un resumen de tres cifras (elevación, resolución nominal, intervalo de curvas).
-- **`.viewer`** — contiene `#terrain-plot` y `#satellite-map` (uno oculto en todo momento), el
-  panel `.controls`, la leyenda del mapa, el pie de atribución, el aviso táctil, el cargador y el
-  mensaje de error.
+- **Modelo 3D**, a la izquierda, con la barra vertical de coloración, exageración, curvas y cámara.
+- **Imagen satelital**, a la derecha, con controles Leaflet, leyenda y herramienta de perfil.
 
-Los scripts se cargan al final en orden estricto: Plotly → Leaflet → `terrain-data.js` → `app.js`.
-`app.js` depende de que los tres anteriores ya hayan definido sus globales.
+Las etiquetas de panel se colocan lejos de los controles de cada biblioteca. Las lecturas del
+cursor se muestran sobre ambas vistas. El panel del perfil aparece sobre la zona inferior del mapa
+y oculta temporalmente la leyenda para evitar solapamientos.
+
+Los scripts se cargan al final en este orden: Plotly, Leaflet, Proj4, `terrain-data.js` y
+`app.js`. El último usa `type="module"` y resuelve sus dependencias internas desde `dist/js/`.
+
+## Cabecera
+
+En escritorio mide 66 px. El logo y el nombre **Gestiagro** forman un bloque con proporciones de
+marca; a continuación aparecen el título y EPSG:32620. A la derecha se muestran elevación,
+resolución y curvas. No se presentan el nombre interno del área ni un descriptor corporativo.
+
+## Herramientas
+
+Los botones usan SVG en línea, estado activo turquesa, foco visible y etiquetas emergentes. En
+escritorio la barra del modelo se ubica abajo a la izquierda. En móvil pasa a una fila horizontal,
+mientras el botón de perfil permanece dentro del panel satelital.
+
+La exageración abre un panel pequeño con deslizador. El botón de perfil activa instrucciones A–B y
+su estado se refleja con `aria-pressed`.
 
 ## Accesibilidad
 
-Presente: `aria-label` en las regiones y grupos, `aria-pressed` en los botones de estado,
-`role="img"` en el lienzo 3D con descripción, `aria-live="polite"` en el cargador, `<output>`
-enlazado al deslizador, foco visible con `outline` de 2 px, y respeto de
-`prefers-reduced-motion`.
-
-Límite conocido: la escena 3D en sí no es navegable por teclado — es una limitación de Plotly, no
-del código del proyecto.
+Las regiones tienen nombres accesibles, los botones de estado usan `aria-pressed`, el panel de
+exageración declara `aria-expanded`/`aria-controls`, el gráfico del perfil tiene `role="img"` y el
+cargador usa `aria-live="polite"`. `Esc` cierra interfaces transitorias. Todos los controles
+interactivos tienen foco visible y se respeta `prefers-reduced-motion`.
 
 ## Sistema visual
 
-Tokens en `:root` de [`dist/styles.css`](../../dist/styles.css):
+Los tokens CSS viven en `:root` de [`dist/styles.css`](../../dist/styles.css). Los colores que
+necesita JavaScript se centralizan en `BRAND` dentro de
+[`dist/js/config.js`](../../dist/js/config.js), evitando literales repetidos entre adaptadores.
 
 | Token | Valor | Uso |
 | --- | --- | --- |
-| `--brand-dark` | `#015059` | Inicio del degradado, `theme-color` |
-| `--brand` | `#0396a6` | Botón activo, línea del buffer |
-| `--brand-light` | `#00cba9` | Acentos, valores, línea del lindero |
-| `--primary-500` | `#03c0d0` | Foco y `accent-color` del deslizador |
-| `--gray-100` … `--gray-950` | escala Slate | Texto y fondos |
-| `--panel` / `--panel-border` | `rgba(15,23,42,.92)` / `rgba(148,163,184,.28)` | Paneles flotantes |
-| `--brand-gradient` | 135°, de `--brand-dark` a `--brand-light` | Cabecera |
+| `--brand-dark` | `#015059` | Marca, fondos activos |
+| `--brand` | `#0396a6` | Zona de influencia |
+| `--brand-light` | `#00cba9` | Lindero, seguimiento y perfil |
+| `--primary-500` | `#03c0d0` | Foco y deslizador |
+| `--gray-100` … `--gray-950` | escala Slate | Texto, paneles y fondo |
 
-Tipografía **Montserrat** (300–800) desde Google Fonts, con `system-ui` de respaldo. Tema oscuro
-fijo (`color-scheme: dark`); no hay modo claro. Los colores de la escena Plotly están duplicados en
-`app.js` como literales y **no** leen estos tokens.
+La tipografía es Montserrat con `system-ui` de respaldo. El tema es oscuro y la cabecera usa el
+degradado oficial de Gestiagro.
 
-## Diseño responsivo
+## Adaptación móvil
 
-`100dvh` con `overflow: hidden` — la página nunca desplaza; el visor siempre ocupa la ventana.
-
-| Corte | Qué cambia |
-| --- | --- |
-| ≤900 px | Cabecera más baja, logo más pequeño, sin descriptor ni cifras de resumen |
-| ≤600 px | Se oculta el logo, tipografías reducidas, sin pie de atribución |
-| **≤760 px** | **Los controles dejan de flotar y pasan a una barra inferior** (ver abajo) |
-| ≤760 px y ≤560 px de alto | Barra inferior compacta, para móvil apaisado |
-| ≥761 px | Se oculta el aviso táctil |
-
-### Barra de controles en móvil
-
-Por debajo de 760 px, `.viewer` se convierte en una rejilla de dos filas
-(`minmax(0, 1fr) auto`): el mapa ocupa la primera y `.controls` la segunda, ya no como panel
-flotante sino como **barra fija al pie**, a ancho completo y con
-`padding-bottom` que respeta `env(safe-area-inset-bottom)`.
-
-Dentro de la barra, los grupos se reparten en dos columnas: *Vista* y *Coloración* arriba,
-la exageración vertical y los botones de utilidad a ancho completo debajo. Los botones suben a
-42 px de alto para el dedo y se oculta el rótulo "VISUALIZACIÓN". En la vista satelital, al
-ocultarse los controles `.terrain-only`, la barra se reduce a la fila de *Vista*.
-
-El cambio obliga a reubicar dos elementos que estaban posicionados en absoluto sobre el visor:
-la leyenda del mapa pasa arriba a la izquierda, y el aviso táctil deja de ser absoluto para ser
-un elemento de la celda del mapa (`align-self: end`), de modo que nunca queda bajo la barra.
-
-No hace falta tocar `app.js`: Plotly ya está en modo `responsive` y el mapa recalcula su tamaño
-en `resize`.
-
-## Activos
-
-`dist/assets/` contiene los dos logos Gestiagro (color y blanco) y `satellite-texture.jpg`.
-Los PNG pesan **1,2 MB y 1,6 MB** sin optimizar para mostrarse a 110 px. Ver [Pendientes](pendientes.md).
+Por debajo de 760 px las vistas se apilan verticalmente y la barra del modelo se vuelve horizontal.
+Las lecturas de coordenadas cambian de posición, el gráfico del perfil reduce su altura y sus cuatro
+estadísticas pasan a dos columnas. Por debajo de 600 px se simplifica la cabecera y se oculta el pie.
