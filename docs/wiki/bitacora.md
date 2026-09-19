@@ -2,6 +2,14 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Encuadre ajustado a la zona de influencia
+
+El mapa pasa a usar `zoomSnap: 0`, de modo que `fitBounds` puede tomar zooms fraccionarios. Antes
+bajaba al entero inferior y la zona de influencia ocupaba el 69 % del ancho del panel; ahora ocupa
+el 94 %, con 18 px de margen en lugar de 34. El botón de "volver al área de estudio" detiene lo que
+esté en curso y reencuadra sin animación, para que no quede medio nivel corto si se pulsa durante
+un zoom. → [Vista satelital](vista-satelital.md)
+
 ## 2026-09-18 — Zona de influencia ampliada a 500 m
 
 El modelo pasa de 200 m a **500 m** de zona de influencia: la malla crece de 136×134 a 160×158

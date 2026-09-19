@@ -13,8 +13,22 @@ terminar la escena 3D y permanece visible en paralelo con ella.
 | Área de estudio | línea turquesa y relleno al 12 % | `data.boundary` |
 
 El mapa incluye zoom arriba a la derecha, reencuadre del área debajo y escala métrica abajo a la
-izquierda. `fitStudyArea` encuadra el buffer con 34 px de margen. La atribución de Esri, Maxar,
-Earthstar Geographics y GIS User Community permanece visible.
+izquierda. La atribución de Esri, Maxar, Earthstar Geographics y GIS User Community permanece
+visible.
+
+### Encuadre del área
+
+`fitStudyArea` ajusta el mapa a la zona de influencia con 18 px de margen, y es la misma función
+que usan el encuadre inicial y el botón de "volver al área de estudio".
+
+El mapa se crea con **`zoomSnap: 0`**, que habilita niveles de zoom fraccionarios. Sin eso,
+`fitBounds` baja al entero inmediatamente inferior y el buffer ocupa alrededor del **69 %** del
+ancho del panel, dejando un marco vacío grande; con zoom fraccionario pasa a ocupar el **94 %**.
+`zoomDelta: 0.5` mantiene coherentes los botones de zoom con esa granularidad.
+
+El reencuadre llama antes a `map.stop()` y se aplica sin animación: si se pulsa el botón mientras
+corre una animación de zoom, el ajuste se aplicaría antes que ella y el encuadre quedaría medio
+nivel corto.
 
 ## Coordenadas y sincronización
 

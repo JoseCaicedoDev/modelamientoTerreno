@@ -49,7 +49,11 @@ export function createSatelliteMap({
   }
 
   function fitStudyArea() {
-    if (studyAreaBounds) map.fitBounds(studyAreaBounds, { padding: [34, 34] });
+    if (!studyAreaBounds) return;
+    // Detener lo que esté en curso: si se pulsa mientras corre una animación de zoom, el encuadre
+    // se aplicaría antes que ella y quedaría medio nivel corto.
+    map.stop();
+    map.fitBounds(studyAreaBounds, { padding: [18, 18], animate: false });
   }
 
   function addResetAreaControl() {
@@ -246,7 +250,16 @@ export function createSatelliteMap({
 
   function initialize() {
     if (map) return;
-    map = leaflet.map(element, { zoomControl: false, attributionControl: true, doubleClickZoom: false });
+    // zoomSnap a 0 permite niveles de zoom fraccionarios: sin esto, fitBounds baja al entero
+    // inmediatamente inferior y la zona de influencia queda ocupando apenas dos tercios del panel.
+    map = leaflet.map(element, {
+      zoomControl: false,
+      attributionControl: true,
+      doubleClickZoom: false,
+      zoomSnap: 0,
+      zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 90
+    });
     leaflet.control.zoom({ position: 'topright' }).addTo(map);
     addResetAreaControl();
     leaflet.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
