@@ -1,4 +1,11 @@
-import { BRAND, ELEVATION_SCALE, INITIAL_CAMERA, WATER_COLOR } from '../config.js';
+import {
+  BRAND,
+  ELEVATION_SCALE,
+  INITIAL_CAMERA,
+  PLANNING_COLORS,
+  PLANNING_PIN_HEIGHT,
+  WATER_COLOR
+} from '../config.js';
 import { buildSatelliteMeshData } from '../domain/terrain.js';
 import { fanTriangulation } from '../domain/geometry.js';
 
@@ -9,7 +16,9 @@ export const TRAZA = Object.freeze({
   satelital: 1,
   cursor: 2,
   cauces: 3,
-  agua: 4
+  mastiles: 4,
+  pines: 5,
+  agua: 6
 });
 
 function createSurfaceTrace(data) {
@@ -82,6 +91,46 @@ function createCursorTrace() {
       line: { color: '#ffffff', width: 3 },
       opacity: 1
     }
+  };
+}
+
+// Mástil vertical de cada punto del plan: sale del relieve y sostiene la cabeza del pin.
+function createPinMastsTrace() {
+  return {
+    type: 'scatter3d',
+    mode: 'lines',
+    x: [],
+    y: [],
+    z: [],
+    visible: false,
+    hoverinfo: 'skip',
+    showlegend: false,
+    line: { color: 'rgba(241,245,249,0.75)', width: 4 }
+  };
+}
+
+// Cabeza del pin, con el color del rol y el código del punto como etiqueta.
+function createPinHeadsTrace() {
+  return {
+    type: 'scatter3d',
+    mode: 'markers+text',
+    x: [],
+    y: [],
+    z: [],
+    text: [],
+    customdata: [],
+    visible: false,
+    showlegend: false,
+    textposition: 'top center',
+    textfont: { family: 'Montserrat, system-ui, sans-serif', color: BRAND.text, size: 10 },
+    marker: {
+      size: 7,
+      color: [],
+      symbol: 'circle',
+      line: { color: '#ffffff', width: 2 },
+      opacity: 1
+    },
+    hovertemplate: '%{customdata}<extra></extra>'
   };
 }
 
@@ -177,6 +226,8 @@ export function createTerrainPlot({ element, data, waterRing, plotly = window.Pl
         createSatelliteTrace(data),
         createCursorTrace(),
         createStreamsTrace(),
+        createPinMastsTrace(),
+        createPinHeadsTrace(),
         createWaterTrace(waterRing)
       ],
       createLayout(data, exaggeration),
@@ -252,6 +303,37 @@ export function createTerrainPlot({ element, data, waterRing, plotly = window.Pl
     }, [TRAZA.cauces]);
   }
 
+  // points: puntos del plan de campo ({ id, x, y, z, role, roleLabel }), o null para ocultarlos.
+  function setPlanningPins(points) {
+    if (!initialized) return;
+    if (!points?.length) {
+      plotly.restyle(element, { visible: false, x: [[], []], y: [[], []], z: [[], []] }, [TRAZA.mastiles, TRAZA.pines]);
+      return;
+    }
+    const mast = { x: [], y: [], z: [] };
+    points.forEach(point => {
+      const base = Number(point.z ?? 0);
+      mast.x.push(point.x, point.x, null);
+      mast.y.push(point.y, point.y, null);
+      mast.z.push(base, base + PLANNING_PIN_HEIGHT, null);
+    });
+    plotly.restyle(element, {
+      x: [mast.x],
+      y: [mast.y],
+      z: [mast.z],
+      visible: true
+    }, [TRAZA.mastiles]);
+    plotly.restyle(element, {
+      x: [points.map(point => point.x)],
+      y: [points.map(point => point.y)],
+      z: [points.map(point => Number(point.z ?? 0) + PLANNING_PIN_HEIGHT)],
+      text: [points.map(point => point.id)],
+      customdata: [points.map(point => `${point.id} · ${point.roleLabel}<br>Elevación: ${Number(point.z ?? 0).toFixed(1)} m.s.n.m.`)],
+      'marker.color': [points.map(point => PLANNING_COLORS[point.role] ?? BRAND.accent)],
+      visible: true
+    }, [TRAZA.pines]);
+  }
+
   function resize() {
     if (initialized) plotly.Plots.resize(element);
   }
@@ -266,6 +348,7 @@ export function createTerrainPlot({ element, data, waterRing, plotly = window.Pl
     clearCursor,
     setWaterLevel,
     setStreams,
+    setPlanningPins,
     resize
   });
 }

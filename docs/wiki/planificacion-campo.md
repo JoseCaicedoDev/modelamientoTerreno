@@ -75,6 +75,15 @@ necesariamente edificios, vegetación u obstáculos temporales.
 | Exclusión | polígono rojo |
 | Acceso | línea amarilla |
 
+## Pines en el modelo 3D
+
+Cada punto del plan se dibuja además como un pin sobre el relieve: un mástil de 12 m desde la cota
+del terreno y una cabeza con el color de su rol y su código. Lo resuelve `setPlanningPins` en
+[`adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js), que el planificador alimenta
+a través del callback `onPlanChange`; así la propuesta puede juzgarse contra la forma del terreno
+—lomas, quiebres y depresiones— y no solo contra la imagen satelital. Los pines siguen cualquier
+edición de la lista o del mapa y se apagan al cerrar la herramienta.
+
 ## Persistencia y entregables
 
 El paso 4 separa los entregables en *Para la comisión de campo* (informe imprimible, KMZ, KML) y

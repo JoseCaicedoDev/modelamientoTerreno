@@ -2,6 +2,24 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Los puntos del plan se ven en el modelo 3D · v2.4.2
+
+La propuesta de fotocontrol solo existía sobre la imagen satelital, donde el relieve no se aprecia.
+El modelo 3D gana dos trazas de índice fijo —`mastiles` y `pines`, insertadas antes del plano de
+agua para no romper su orden de translucidez— que dibujan cada punto como un pin: mástil de 12 m
+desde la cota del terreno (`PLANNING_PIN_HEIGHT`) y cabeza con el color del rol, el código como
+etiqueta y la elevación en el globo de información. Al estar la altura en metros del modelo, la
+exageración vertical la escala igual que al relieve.
+
+`setPlanningPins` vive en [`adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js) y la
+conecta [`app.js`](../../dist/app.js) con el nuevo callback `onPlanChange` del planificador: los
+pines se actualizan al generar, mover, añadir o quitar puntos y se apagan al cerrar la herramienta.
+Los colores de los roles pasan a `PLANNING_COLORS` en
+[`config.js`](../../dist/js/config.js), que ahora comparten el panel, los marcadores del mapa y los
+pines. De paso, la página del visor documentaba tres trazas cuando ya había cinco: la tabla se
+corrige y ahora lista las siete. → [Visor 3D](visor-3d.md) ·
+[Planificación de campo](planificacion-campo.md)
+
 ## 2026-09-18 — Panel de plan de campo más guiado · v2.4.1
 
 El panel del planificador era una sola columna de formularios, botones y filas de 8 px sin decir en

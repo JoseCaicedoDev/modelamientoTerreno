@@ -32,6 +32,18 @@ export const WATER_COLOR = '#2488bd';
 
 export const STREAM_COLOR = '#38bdf8';
 
+// Colores de los puntos del plan de campo. Los comparten el panel, los marcadores del mapa y los
+// pines del modelo 3D; `dist/styles.css` los duplica para los bordes y las etiquetas de la lista.
+export const PLANNING_COLORS = Object.freeze({
+  control: '#22c55e',
+  gcp: '#f59e0b',
+  checkpoint: '#a78bfa',
+  auxiliar: '#22d3ee'
+});
+
+// Altura del mástil de cada pin sobre el terreno, en metros del propio modelo.
+export const PLANNING_PIN_HEIGHT = 12;
+
 export const UTM_20N = '+proj=utm +zone=20 +datum=WGS84 +units=m +no_defs';
 
 export const coordinateFormatter = new Intl.NumberFormat('es-CO', {

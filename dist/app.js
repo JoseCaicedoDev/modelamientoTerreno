@@ -176,6 +176,7 @@ function startApplication() {
       settings: { tipo: 'area', metodo: 'combinado', alternativa: 'cobertura', gcp: 5, checkpoints: 2 }
     },
     setInstruction,
+    onPlanChange: plan => terrainPlot.setPlanningPins(plan?.points ?? null),
     onClose: () => tools.deactivateAll()
   });
 

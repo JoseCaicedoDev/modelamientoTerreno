@@ -1,3 +1,4 @@
+import { PLANNING_COLORS } from '../config.js';
 import {
   addPlanPoint,
   evaluatePlan,
@@ -18,7 +19,7 @@ import {
 } from '../domain/planning-export.js';
 
 const STORAGE_KEY = 'gestiagro.planificacion.v1';
-const COLORS = Object.freeze({ area: '#f8fafc', exclusion: '#ef4444', access: '#facc15', control: '#22c55e', gcp: '#f59e0b', checkpoint: '#a78bfa', auxiliar: '#22d3ee' });
+const COLORS = Object.freeze({ area: '#f8fafc', exclusion: '#ef4444', access: '#facc15', ...PLANNING_COLORS });
 
 // Los grupos ordenan la lista como se recorre el trabajo: primero lo que ya existe, después lo
 // propuesto. La descripción explica para qué sirve cada rol sin obligar a abrir la documentación.
@@ -108,6 +109,7 @@ export function createPlanningController({
   data,
   project,
   setInstruction,
+  onPlanChange,
   onClose
 }) {
   const byId = id => panel.querySelector(`#${id}`);
@@ -383,6 +385,7 @@ export function createPlanningController({
     renderConnections();
     elements.exports.hidden = !currentPlan;
     if (elements.exportsEmpty) elements.exportsEmpty.hidden = Boolean(currentPlan);
+    onPlanChange?.(currentPlan);
     satelliteMap.renderPlanning(currentPlan, currentProject, {
       onMove: (id, position) => {
         currentPlan = movePlanPoint(currentPlan, id, position, context);
@@ -578,6 +581,8 @@ export function createPlanningController({
     },
     hide() {
       panel.hidden = true;
+      // Los pines del modelo 3D acompañan al panel: sin plan a la vista no deben quedar colgados.
+      onPlanChange?.(null);
       pane?.classList.remove('panel-visible');
       satelliteMap.cancelDrawing();
       setInstruction(null);
