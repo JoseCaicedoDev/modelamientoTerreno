@@ -1,5 +1,3 @@
-import { UTM_20N } from '../config.js';
-
 // Capa de Leaflet que pinta rásteres derivados de la malla (inundación, encharcamiento, cauces)
 // escribiendo ImageData directamente sobre un canvas.
 //
@@ -27,7 +25,7 @@ function gridBounds(grid, data, project, leaflet) {
     [data.x[grid.columns - 1], data.y[0]],
     [data.x[0], data.y[grid.rows - 1]],
     [data.x[grid.columns - 1], data.y[grid.rows - 1]]
-  ].map(([easting, northing]) => project(UTM_20N, 'EPSG:4326', [easting, northing]));
+  ].map(([easting, northing]) => project(data.crs, 'EPSG:4326', [easting, northing]));
   const longitudes = corners.map(corner => corner[0]);
   const latitudes = corners.map(corner => corner[1]);
   return leaflet.latLngBounds(
@@ -36,7 +34,7 @@ function gridBounds(grid, data, project, leaflet) {
   );
 }
 
-function buildLookup({ grid, bounds, width, height, project }) {
+function buildLookup({ grid, data, bounds, width, height, project }) {
   const west = bounds.getWest();
   const east = bounds.getEast();
   const south = bounds.getSouth();
@@ -48,7 +46,7 @@ function buildLookup({ grid, bounds, width, height, project }) {
     for (let column = 0; column < CONTROL_POINTS; column += 1) {
       const longitude = west + ((east - west) * column) / (CONTROL_POINTS - 1);
       const latitude = north - ((north - south) * row) / (CONTROL_POINTS - 1);
-      const [easting, northing] = project('EPSG:4326', UTM_20N, [longitude, latitude]);
+      const [easting, northing] = project('EPSG:4326', data.crs, [longitude, latitude]);
       controlEasting[row * CONTROL_POINTS + column] = easting;
       controlNorthing[row * CONTROL_POINTS + column] = northing;
     }
@@ -132,7 +130,7 @@ export function createRasterOverlay({
   const layer = new RasterLayer();
 
   function ensureLookup() {
-    if (!lookup) lookup = buildLookup({ grid, bounds, width, height, project });
+    if (!lookup) lookup = buildLookup({ grid, data, bounds, width, height, project });
     return lookup;
   }
 

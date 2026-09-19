@@ -124,7 +124,7 @@ function createPinHeadsTrace() {
     textposition: 'top center',
     textfont: { family: 'Montserrat, system-ui, sans-serif', color: BRAND.text, size: 10 },
     marker: {
-      size: 7,
+      size: 9,
       color: [],
       symbol: 'circle',
       line: { color: '#ffffff', width: 2 },
@@ -184,6 +184,13 @@ function axis(title) {
   };
 }
 
+// Rango vertical de la escena. Plotly recorta cuanto cae fuera de él, así que también acota los
+// pines del plan de campo: sin esto, un punto alto empuja su cabeza por encima del techo y el pin
+// entero desaparece.
+function elevationRange(data) {
+  return [data.minElevation - 2, data.maxElevation + 3];
+}
+
 function createLayout(data, exaggeration) {
   return {
     autosize: true,
@@ -202,7 +209,7 @@ function createLayout(data, exaggeration) {
       zaxis: {
         ...axis('Elevación (m.s.n.m.)'),
         tickformat: undefined,
-        range: [data.minElevation - 2, data.maxElevation + 3]
+        range: elevationRange(data)
       }
     }
   };
@@ -310,12 +317,14 @@ export function createTerrainPlot({ element, data, waterRing, plotly = window.Pl
       plotly.restyle(element, { visible: false, x: [[], []], y: [[], []], z: [[], []] }, [TRAZA.mastiles, TRAZA.pines]);
       return;
     }
+    const [floor, ceiling] = elevationRange(data);
+    const clampElevation = value => Math.min(Math.max(value, floor), ceiling);
+    const headElevation = point => clampElevation(Number(point.z ?? 0) + PLANNING_PIN_HEIGHT);
     const mast = { x: [], y: [], z: [] };
     points.forEach(point => {
-      const base = Number(point.z ?? 0);
       mast.x.push(point.x, point.x, null);
       mast.y.push(point.y, point.y, null);
-      mast.z.push(base, base + PLANNING_PIN_HEIGHT, null);
+      mast.z.push(clampElevation(Number(point.z ?? 0)), headElevation(point), null);
     });
     plotly.restyle(element, {
       x: [mast.x],
@@ -326,7 +335,7 @@ export function createTerrainPlot({ element, data, waterRing, plotly = window.Pl
     plotly.restyle(element, {
       x: [points.map(point => point.x)],
       y: [points.map(point => point.y)],
-      z: [points.map(point => Number(point.z ?? 0) + PLANNING_PIN_HEIGHT)],
+      z: [points.map(headElevation)],
       text: [points.map(point => point.id)],
       customdata: [points.map(point => `${point.id} · ${point.roleLabel}<br>Elevación: ${Number(point.z ?? 0).toFixed(1)} m.s.n.m.`)],
       'marker.color': [points.map(point => PLANNING_COLORS[point.role] ?? BRAND.accent)],

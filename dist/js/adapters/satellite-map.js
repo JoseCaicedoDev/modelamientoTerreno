@@ -1,4 +1,4 @@
-import { BRAND, UTM_20N } from '../config.js';
+import { BRAND } from '../config.js';
 import { createRasterOverlay } from './raster-overlay.js';
 
 const PROFILE_COLOR = BRAND.profile;
@@ -13,6 +13,7 @@ export function createSatelliteMap({
   onPointer,
   onPointerLeave
 }) {
+  const terrainCrs = data.crs;
   let map;
   let studyAreaBounds;
   let cursorMarker;
@@ -24,24 +25,24 @@ export function createSatelliteMap({
 
   // Punto ajustado al centro de la celda del DEM: lo usa el perfil, que muestrea la malla.
   function toTerrainPoint(latlng) {
-    const [easting, northing] = project('EPSG:4326', UTM_20N, [latlng.lng, latlng.lat]);
+    const [easting, northing] = project('EPSG:4326', terrainCrs, [latlng.lng, latlng.lat]);
     const point = nearestPoint(easting, northing);
     if (!point) return null;
-    const [longitude, latitude] = project(UTM_20N, 'EPSG:4326', [point.x, point.y]);
+    const [longitude, latitude] = project(terrainCrs, 'EPSG:4326', [point.x, point.y]);
     return { ...point, latlng: leaflet.latLng(latitude, longitude) };
   }
 
   // Punto exacto donde se hizo clic, con la elevación de la celda más cercana.
   // La medición lo prefiere: ajustar a la celda de 25 m falsearía longitudes y áreas.
   function toExactPoint(latlng) {
-    const [easting, northing] = project('EPSG:4326', UTM_20N, [latlng.lng, latlng.lat]);
+    const [easting, northing] = project('EPSG:4326', terrainCrs, [latlng.lng, latlng.lat]);
     const sample = nearestPoint(easting, northing);
     if (!sample) return null;
     return { x: easting, y: northing, z: sample.z, latlng };
   }
 
   function toLatLng(point) {
-    const [longitude, latitude] = project(UTM_20N, 'EPSG:4326', [point.x, point.y]);
+    const [longitude, latitude] = project(terrainCrs, 'EPSG:4326', [point.x, point.y]);
     return leaflet.latLng(latitude, longitude);
   }
 
@@ -388,7 +389,7 @@ export function createSatelliteMap({
 
   function showCursor(point) {
     if (!map || !point) return;
-    const [longitude, latitude] = project(UTM_20N, 'EPSG:4326', [point.x, point.y]);
+    const [longitude, latitude] = project(terrainCrs, 'EPSG:4326', [point.x, point.y]);
     if (!cursorMarker) {
       cursorMarker = leaflet.circleMarker([latitude, longitude], {
         radius: 8,

@@ -2,6 +2,19 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Los pines altos ya no desaparecen del modelo 3D · v2.4.3
+
+Un checkpoint situado en la meseta no se dibujaba en el 3D. Plotly descarta los vértices que caen
+fuera del rango del eje, y el eje vertical llega a `maxElevation + 3` = 58 m: cualquier punto por
+encima de los 46 m empujaba la cabeza de su pin —12 m sobre el terreno— fuera de la escena y con
+ella el pin entero. Afecta al 1,7 % de las celdas válidas del payload; otro 5,2 % queda por debajo
+del piso de -2 m.
+
+`setPlanningPins` recorta ahora la base y la cabeza al rango que devuelve la nueva función
+`elevationRange(data)`, que también usa el layout en lugar de repetir los literales. El pin se
+acorta cerca del techo, pero siempre se dibuja. La cabeza pasa de 7 a 9 px para leerse mejor sobre
+el relieve. → [Visor 3D](visor-3d.md) · [Pendientes](pendientes.md)
+
 ## 2026-09-18 — Los puntos del plan se ven en el modelo 3D · v2.4.2
 
 La propuesta de fotocontrol solo existía sobre la imagen satelital, donde el relieve no se aprecia.

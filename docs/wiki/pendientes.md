@@ -48,6 +48,10 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
   no transforma archivos con otro CRS ni distingue alturas elipsoidales y ortométricas.
 - La red es una propuesta geométrica con comprobaciones de conexión y redundancia. No ajusta
   observaciones, calcula elipses de error ni certifica precisión.
+- Los pines del modelo 3D se recortan al rango del eje vertical, así que un punto por encima de los
+  46 m muestra un mástil más corto que los 12 m nominales y otro por debajo de -2 m lo muestra
+  pegado al piso. Es consecuencia de que `minElevation`/`maxElevation` estén fijados en 0 y 55 en el
+  canal de datos, la misma decisión pendiente que satura la rampa de color.
 - El informe se genera como documento HTML imprimible: el usuario elige **Guardar como PDF** en el
   diálogo del navegador. No se descarga un PDF binario automáticamente.
 

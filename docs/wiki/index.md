@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · pines del plan de campo en el modelo 3D · Sistema v2.4.2
+Actualizada el 2026-09-18 · pines del plan recortados al rango del eje · Sistema v2.4.3
 
 ## Páginas
 

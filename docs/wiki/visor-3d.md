@@ -68,6 +68,13 @@ arranca en la cota del terreno y sube `PLANNING_PIN_HEIGHT` metros —12 m defin
 `PLANNING_COLORS`, el código del punto como etiqueta y la elevación en el globo de información.
 Como la altura está en metros del modelo, la exageración vertical la escala igual que al relieve.
 
+Tanto la base como la cabeza se recortan al rango vertical de la escena, que devuelve
+`elevationRange(data)` y vale `[minElevation - 2, maxElevation + 3]`, es decir `[-2, 58]` con el
+payload actual. Es necesario: Plotly descarta los vértices que caen fuera del rango del eje, de modo
+que un punto sobre los 46 m empujaba su cabeza por encima del techo y el pin desaparecía entero.
+El 1,7 % de las celdas válidas está en ese caso y el 5,2 % queda por debajo del piso. Recortado, el
+pin se acorta pero siempre se ve.
+
 Los pines los enciende [`app.js`](../../dist/app.js) con el callback `onPlanChange` del
 planificador, de modo que se actualizan al generar la propuesta, al mover un punto y al añadir o
 quitar uno; cerrar la herramienta los apaga con `setPlanningPins(null)`. Pasar el cursor sobre un
