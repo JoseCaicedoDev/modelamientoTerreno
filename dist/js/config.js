@@ -65,3 +65,35 @@ export function formatElevation(value) {
 export function formatCoordinateLabel(point) {
   return `E ${coordinateFormatter.format(point.x)} m · N ${coordinateFormatter.format(point.y)} m · Elev. ${coordinateFormatter.format(point.z)} m.s.n.m.`;
 }
+
+// Niveles de referencia del Orinoco en Ciudad Bolívar (estación 0870 del INAMEH), la estación
+// de aforo más cercana al área. Sitúan la cota simulada frente a lo que el río ha hecho de
+// verdad. Son cotas del limnígrafo: el DEM es ALOS PALSAR RTC y su datum vertical puede no
+// coincidir exactamente, así que la comparación es orientativa.
+export const REFERENCIAS_ORINOCO = Object.freeze([
+  Object.freeze({ cota: 16.5, etiqueta: 'Alerta verde' }),
+  Object.freeze({ cota: 18.0, etiqueta: 'Riesgo de desborde' }),
+  Object.freeze({ cota: 18.34, etiqueta: 'Récord 2018' }),
+  Object.freeze({ cota: 19.14, etiqueta: 'Máximo histórico 1892' })
+]);
+
+const MINUTO = 60;
+const HORA = 3600;
+const DIA = 86400;
+
+export function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return 'sin aporte';
+  if (seconds < MINUTO) return `${Math.round(seconds)} s`;
+  if (seconds < HORA) return `${(seconds / MINUTO).toLocaleString('es-CO', { maximumFractionDigits: 0 })} min`;
+  if (seconds < 2 * DIA) return `${(seconds / HORA).toLocaleString('es-CO', { maximumFractionDigits: 1 })} h`;
+  if (seconds < 365 * DIA) return `${(seconds / DIA).toLocaleString('es-CO', { maximumFractionDigits: 1 })} días`;
+  return `${(seconds / (365 * DIA)).toLocaleString('es-CO', { maximumFractionDigits: 1 })} años`;
+}
+
+export function formatRainfall(millimeters) {
+  return `${millimeters.toLocaleString('es-CO', { maximumFractionDigits: millimeters < 10 ? 1 : 0 })} mm`;
+}
+
+export function formatDischarge(cubicMetersPerSecond) {
+  return `${cubicMetersPerSecond.toLocaleString('es-CO', { maximumFractionDigits: cubicMetersPerSecond < 10 ? 2 : 0 })} m³/s`;
+}

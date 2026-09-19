@@ -2,6 +2,27 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Tiempo de llenado y referencias del Orinoco
+
+El panel de nivel de agua deja de responder solo "cuánta agua" y responde también "en cuánto
+tiempo". [`domain/flood-timing.js`](../../dist/js/domain/flood-timing.js) resuelve el llenado por
+balance de volumen en dos regímenes conmutables: por lluvia, con el método racional
+`Q = C · i · A` sobre la zona de influencia, y por caudal de entrada externo, con deslizador
+logarítmico de 1 a 10.000 m³/s.
+
+El deslizador de cota gana marcas y una línea de contexto con los niveles del Orinoco en Ciudad
+Bolívar (estación 0870 del INAMEH): alerta verde 16,50, riesgo de desborde 18,00, récord 2018
+18,34 y máximo histórico de 1892 19,14 m.s.n.m. Sirven para situar la cota simulada: el deslizador
+llega a 53 m, casi 34 m por encima de lo que el río ha alcanzado nunca.
+
+La estadística "Cota simulada" se sustituyó por "Tiempo de llenado", porque duplicaba el valor que
+ya muestra el deslizador.
+
+Contraste sobre la malla real (1.173,5 ha de zona de influencia, lluvia de 20 mm/h con C = 0,45):
+cota 18,34 m da 33,81 hm³ y 13,3 días de llenado, equivalentes a 6.403 mm de lluvia bruta — cinco
+veces la lluvia anual de Ciudad Bolívar. Con 50 m³/s de aporte externo, 7,8 días.
+→ [Herramientas de análisis](herramientas-analisis.md)
+
 ## 2026-09-18 — Encuadre ajustado a la zona de influencia
 
 El mapa pasa a usar `zoomSnap: 0`, de modo que `fitBounds` puede tomar zooms fraccionarios. Antes

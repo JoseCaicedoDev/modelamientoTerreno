@@ -1,16 +1,21 @@
 import {
   formatArea,
   formatCoordinateLabel,
+  formatDischarge,
   formatDistance,
+  formatDuration,
   formatElevation,
+  formatRainfall,
   formatVolume,
   MEASURE_COLOR,
+  REFERENCIAS_ORINOCO,
   UTM_20N
 } from './js/config.js';
 import { createTerrainModel } from './js/domain/terrain.js';
 import { createGrid } from './js/domain/grid.js';
 import { measurePath } from './js/domain/measure.js';
 import { createFloodModel } from './js/domain/flood.js';
+import { estimarLlenado, REGIMEN_CAUDAL, REGIMEN_LLUVIA } from './js/domain/flood-timing.js';
 import { createHydrologyModel } from './js/domain/hydrology.js';
 import { parseKml } from './js/domain/kml.js';
 import { extractKmlFromKmz, looksLikeZip } from './js/domain/kmz.js';
@@ -55,6 +60,18 @@ const elements = Object.freeze({
   floodLevel: byId('flood-level'),
   floodLevelValue: byId('flood-level-value'),
   floodConnected: byId('flood-connected'),
+  floodMarks: byId('flood-marks'),
+  floodReference: byId('flood-reference'),
+  floodAssumption: byId('flood-assumption'),
+  floodRainControls: byId('flood-rain-controls'),
+  floodFlowControls: byId('flood-flow-controls'),
+  floodIntensity: byId('flood-intensity'),
+  floodIntensityValue: byId('flood-intensity-value'),
+  floodRunoff: byId('flood-runoff'),
+  floodRunoffValue: byId('flood-runoff-value'),
+  floodDischarge: byId('flood-discharge'),
+  floodDischargeValue: byId('flood-discharge-value'),
+  floodRegimes: Array.from(document.querySelectorAll('[data-flood-regime]')),
   drainageTool: byId('drainage-tool'),
   drainagePanel: byId('drainage-panel'),
   drainageStats: byId('drainage-stats'),
@@ -237,6 +254,7 @@ function startApplication() {
   const flood = createFloodModel(grid);
   let floodRaster = null;
   let floodFrame = 0;
+  let floodRegime = REGIMEN_LLUVIA;
 
   function prepareFloodSlider() {
     const minimum = Math.floor(flood.minimum);
@@ -246,7 +264,71 @@ function startApplication() {
     if (!elements.floodLevel.dataset.ready) {
       elements.floodLevel.value = String(Math.round(minimum + (maximum - minimum) * 0.25));
       elements.floodLevel.dataset.ready = 'si';
+      elements.floodMarks.replaceChildren(...REFERENCIAS_ORINOCO
+        .filter(referencia => referencia.cota >= minimum && referencia.cota <= maximum)
+        .map(referencia => {
+          const marca = document.createElement('option');
+          marca.value = String(referencia.cota);
+          marca.label = referencia.etiqueta;
+          return marca;
+        }));
     }
+  }
+
+  // El deslizador llega mucho más arriba de lo que el Orinoco ha alcanzado nunca: sin esta
+  // referencia es fácil leer como plausible una cota que el río no produce.
+  function describeFloodReference(level) {
+    const debajo = REFERENCIAS_ORINOCO.filter(referencia => referencia.cota <= level);
+    const maximo = REFERENCIAS_ORINOCO[REFERENCIAS_ORINOCO.length - 1];
+    if (!debajo.length) {
+      const proxima = REFERENCIAS_ORINOCO[0];
+      return `${formatElevation(proxima.cota - level)} por debajo de la ${proxima.etiqueta.toLowerCase()} del Orinoco (${formatElevation(proxima.cota)}.s.n.m.).`;
+    }
+    const alcanzada = debajo[debajo.length - 1];
+    if (alcanzada === maximo) {
+      return `${formatElevation(level - maximo.cota)} por encima del ${maximo.etiqueta.toLowerCase()} del Orinoco en Ciudad Bolívar: escenario sin precedente registrado.`;
+    }
+    return `Supera la referencia «${alcanzada.etiqueta}» del Orinoco (${formatElevation(alcanzada.cota)}.s.n.m.).`;
+  }
+
+  // El deslizador de caudal recorre cuatro órdenes de magnitud, de 1 a 10.000 m³/s.
+  function floodDischargeValue() {
+    return 10 ** (Number(elements.floodDischarge.value) / 25);
+  }
+
+  function setFloodRegime(regime) {
+    floodRegime = regime;
+    elements.floodRegimes.forEach(button => {
+      const activo = button.dataset.floodRegime === regime;
+      button.classList.toggle('is-active', activo);
+      button.setAttribute('aria-pressed', activo ? 'true' : 'false');
+    });
+    elements.floodRainControls.hidden = regime !== REGIMEN_LLUVIA;
+    elements.floodFlowControls.hidden = regime !== REGIMEN_CAUDAL;
+  }
+
+  // El aporte se genera sobre toda la zona de influencia: es la única cuenca que el DEM publica.
+  function estimateFloodTiming(volumen) {
+    const intensidad = Number(elements.floodIntensity.value);
+    const coeficiente = Number(elements.floodRunoff.value);
+    const caudal = floodDischargeValue();
+    elements.floodIntensityValue.textContent = `${intensidad} mm/h`;
+    elements.floodRunoffValue.textContent = coeficiente.toLocaleString('es-CO', { minimumFractionDigits: 2 });
+    elements.floodDischargeValue.textContent = formatDischarge(caudal);
+    return estimarLlenado(volumen, floodRegime, {
+      areaAportante: flood.validArea,
+      intensidad,
+      coeficiente,
+      caudal
+    });
+  }
+
+  function describeFloodAssumption(timing) {
+    if (!(timing.caudal > 0)) return 'Sin aporte no hay tiempo de llenado.';
+    if (timing.regimen === REGIMEN_LLUVIA) {
+      return `Aporte de ${formatDischarge(timing.caudal)} generado sobre ${formatArea(flood.validArea)} de zona de influencia. Hacen falta ${formatRainfall(timing.lamina)} de lluvia bruta.`;
+    }
+    return `Aporte externo constante de ${formatDischarge(timing.caudal)}, equivalente a ${formatRainfall(timing.lamina)} repartidos sobre ${formatArea(flood.validArea)}.`;
   }
 
   // Azul más oscuro cuanto mayor es la lámina de agua, hasta 5 m de profundidad.
@@ -280,11 +362,15 @@ function startApplication() {
       floodRaster.render(floodColors(result));
     });
 
+    const timing = estimateFloodTiming(result.volumen);
+    elements.floodReference.textContent = describeFloodReference(level);
+    elements.floodAssumption.textContent = describeFloodAssumption(timing);
+
     floodPanel.setStats([
-      ['Cota simulada', formatElevation(level)],
       ['Área inundada', formatArea(result.area)],
       ['Volumen', formatVolume(result.volumen)],
-      ['Del área de estudio', `${((result.area / flood.validArea) * 100).toFixed(1)} %`]
+      ['Del área de estudio', `${((result.area / flood.validArea) * 100).toFixed(1)} %`],
+      ['Tiempo de llenado', formatDuration(timing.segundos)]
     ]);
     floodPanel.show();
   }
@@ -293,6 +379,7 @@ function startApplication() {
     button: elements.floodTool,
     activate: () => {
       prepareFloodSlider();
+      setFloodRegime(floodRegime);
       updateFlood();
     },
     deactivate: () => {
@@ -308,6 +395,17 @@ function startApplication() {
   });
   elements.floodConnected.addEventListener('change', () => {
     if (tools.isActive('inundacion')) updateFlood();
+  });
+  [elements.floodIntensity, elements.floodRunoff, elements.floodDischarge].forEach(control => {
+    control.addEventListener('input', () => {
+      if (tools.isActive('inundacion')) updateFlood();
+    });
+  });
+  elements.floodRegimes.forEach(button => {
+    button.addEventListener('click', () => {
+      setFloodRegime(button.dataset.floodRegime);
+      if (tools.isActive('inundacion')) updateFlood();
+    });
   });
   elements.floodPanel.addEventListener('click', event => event.stopPropagation());
 

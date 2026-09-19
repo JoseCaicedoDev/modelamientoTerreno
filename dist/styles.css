@@ -547,6 +547,44 @@ input[type="range"] {
 
 .panel-check input { accent-color: var(--primary-500); }
 
+.panel-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.panel-mode {
+  padding: 7px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.56);
+  color: var(--gray-300);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.panel-mode:hover { color: var(--gray-100); border-color: rgba(3, 192, 208, 0.5); }
+
+.panel-mode.is-active {
+  border-color: var(--brand-light);
+  background: rgba(3, 150, 166, 0.22);
+  color: white;
+}
+
+.result-hint {
+  margin: 6px 0 10px;
+  color: var(--gray-400);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.result-stats + .result-hint { margin: 8px 0 0; }
+
+
 .panel-button {
   width: 100%;
   min-height: 38px;
@@ -1097,6 +1135,10 @@ input[type="range"] {
 }
 
 .result-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .panel-mode { font-size: 9px; padding: 8px 6px; }
+
+  .result-hint { font-size: 9px; }
 
   .touch-hint {
     bottom: 10px;

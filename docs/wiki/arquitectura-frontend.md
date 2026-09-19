@@ -35,6 +35,7 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/domain/geometry.js`](../../dist/js/domain/geometry.js) | Longitudes, áreas, punto en polígono, factor de drapeado y triangulación en abanico |
 | [`dist/js/domain/measure.js`](../../dist/js/domain/measure.js) | Medición de recorridos y polígonos: longitud drapeada, área proyectada y área real |
 | [`dist/js/domain/flood.js`](../../dist/js/domain/flood.js) | Inundación por cota: área, volumen y máscara, con modo conectado |
+| [`dist/js/domain/flood-timing.js`](../../dist/js/domain/flood-timing.js) | Tiempo de llenado por balance de volumen: método racional y aporte externo |
 | [`dist/js/domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Relleno de depresiones, direcciones D8, acumulación, cauces y encharcamiento |
 | [`dist/js/domain/kml.js`](../../dist/js/domain/kml.js) | Lectura de KML y conversión a GeoJSON |
 | [`dist/js/domain/kmz.js`](../../dist/js/domain/kmz.js) | Extracción del KML dentro de un KMZ leyendo el ZIP |

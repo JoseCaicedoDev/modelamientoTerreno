@@ -13,6 +13,7 @@ Los botones viven en `.pane-tools`, arriba a la izquierda del panel satelital
 | Perfil topográfico | [`domain/terrain.js`](../../dist/js/domain/terrain.js) (`sampleLine`) | Implementada |
 | Medición de distancias y áreas | [`domain/measure.js`](../../dist/js/domain/measure.js) | Implementada |
 | Simulación de nivel de agua | [`domain/flood.js`](../../dist/js/domain/flood.js) | Implementada |
+| Tiempo de llenado | [`domain/flood-timing.js`](../../dist/js/domain/flood-timing.js) | Implementada |
 | Drenaje y encharcamiento | [`domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Implementada |
 | Capas KML y KMZ del usuario | [`domain/kml.js`](../../dist/js/domain/kml.js), [`domain/kmz.js`](../../dist/js/domain/kmz.js) | Implementada |
 
@@ -79,7 +80,13 @@ búsqueda binaria y una resta, sin recorrer la malla:
 
 La casilla **"solo agua conectada con el exterior"** cambia el criterio: en lugar de marcar toda
 celda bajo la cota, hace un recorrido en anchura desde las celdas del borde del área y descarta las
-depresiones cerradas que no tienen aporte.
+depresiones cerradas que no tienen aporte. La diferencia entre los dos modos es el volumen que vive
+en depresiones sin salida.
+
+**En esta malla la casilla cambia muy poco**, porque el terreno casi no tiene depresiones cerradas
+por encima del mínimo: a cota 10 m pasa de 167,50 a 167,25 ha, y a cota 25 m las dos dan 317,75 ha.
+El modo conectado sigue siendo el correcto para leer una crecida del Orinoco; simplemente, aquí el
+relieve no produce mucha diferencia.
 
 El rango del deslizador usa `actualMinElevation` y `actualMaxElevation` del payload, que hasta
 ahora se publicaban sin que nadie los leyera.
@@ -93,6 +100,26 @@ ahora se publicaban sin que nadie los leyera.
   es un `restyle` de su `z`; la intersección con el relieve la resuelve el z-buffer. Es la única
   traza translúcida de la escena, para evitar los artefactos de ordenación de Plotly.
 
+### Referencias del Orinoco
+
+El área cae en la llanura aluvial del Orinoco, unos 15 km al noreste de Ciudad Bolívar. El
+deslizador llega hasta 53 m.s.n.m., muy por encima de lo que el río produce, así que
+[`config.js`](../../dist/js/config.js) publica `REFERENCIAS_ORINOCO` con los niveles de la
+estación 0870 del INAMEH y el panel los pinta como marcas del deslizador (`<datalist>`) más una
+línea de contexto:
+
+| Referencia | Cota (m.s.n.m.) |
+| --- | --- |
+| Alerta verde | 16,50 |
+| Riesgo de desborde | 18,00 |
+| Máximo de 1976 | 18,05 |
+| Récord de 2018 | 18,34 |
+| Máximo histórico de 1892 | 19,14 |
+
+Son cotas de limnígrafo. El DEM es ALOS PALSAR RTC y su datum vertical puede no coincidir con el
+del aforo, de modo que la comparación es **orientativa y no una equivalencia de datums**; se anota
+en [Pendientes](pendientes.md).
+
 ### Contraste
 
 Con cota 12 m el visor informa 190,88 ha, 19,87 hm³ y 16,3 % del área. El mismo cálculo hecho
@@ -100,14 +127,66 @@ aparte sobre `terrain-data.js` da exactamente esos valores.
 
 ### Límites
 
-El resultado es una inundación estática por cota, no un modelo hidráulico: no considera caudales,
-tiempo, infiltración ni obras. El panel lo advierte.
+El resultado es una inundación estática por cota, no un modelo hidráulico: no considera infiltración
+ni obras, y el tiempo que informa sale de un balance de volumen, no de un tránsito. El panel lo
+advierte.
 
 ### Pruebas
 
 [`tests/flood.test.mjs`](../../tests/flood.test.mjs) comprueba el rango de cotas, el área y el
 volumen de la cota simple, el descarte de una depresión aislada en modo conectado, la inundación
 total con la cota máxima y la ausencia de agua por debajo del mínimo.
+
+## Tiempo de llenado
+
+Responde en cuánto tiempo entra el volumen que la cota necesita.
+[`domain/flood-timing.js`](../../dist/js/domain/flood-timing.js) es aritmética de balance, sin
+estado: `tiempo = volumen / caudal`. Lo que cambia entre regímenes es de dónde sale el caudal.
+
+### Régimen por lluvia
+
+Método racional, `Q = C · i · A`, con el área aportante fijada a **toda la zona de influencia**
+(1.173,5 ha) porque es la única cuenca que el DEM publica. Dos deslizadores: intensidad de 1 a
+120 mm/h y coeficiente de escorrentía de 0,05 a 0,95. El panel informa además la **lámina de lluvia
+bruta** necesaria, `volumen × 1000 / (área × C)` en mm, que es la cifra que delata un escenario
+imposible.
+
+### Régimen por caudal
+
+Aporte externo constante en m³/s, para crecida de río, rotura o bombeo. El deslizador es
+logarítmico — `caudal = 10^(valor/25)` con el valor de 0 a 100 — para cubrir de 1 a 10.000 m³/s sin
+perder resolución en la parte baja.
+
+### Contraste
+
+Con la malla real, lluvia de 20 mm/h y C = 0,45:
+
+| Cota | Área | Volumen | Tiempo por lluvia | Lluvia bruta | Tiempo con 50 m³/s |
+| --- | --- | --- | --- | --- | --- |
+| 10,0 m | 167,50 ha | 16,29 hm³ | 6,4 días | 3.085 mm | 3,8 días |
+| 16,5 m | 234,00 ha | 29,36 hm³ | 11,6 días | 5.560 mm | 6,8 días |
+| 18,34 m | 251,06 ha | 33,81 hm³ | 13,3 días | 6.403 mm | 7,8 días |
+| 25,0 m | 317,75 ha | 52,80 hm³ | 20,8 días | 9.998 mm | 12,2 días |
+
+La lluvia media anual de Ciudad Bolívar ronda los 1.280 mm, con julio como mes más lluvioso
+(159 mm). Las láminas de la tabla están entre dos y ocho veces esa cifra anual: **la lluvia local
+no puede, por sí sola, llenar estas cotas**. El agua de una inundación aquí viene del río.
+
+### Límites
+
+- Es un balance de volumen con aporte constante: no hay propagación de la onda de crecida,
+  infiltración, evaporación ni almacenamiento en el suelo.
+- El método racional está pensado para caudales punta en duraciones del orden del tiempo de
+  concentración. Aplicado a llenados de días, sobrestima, porque supone la intensidad sostenida.
+- El área aportante no es la cuenca real de la depresión: es toda la zona de influencia. Cuando la
+  cuenca verdadera sea menor, el tiempo real será mayor.
+
+### Pruebas
+
+[`tests/flood-timing.test.mjs`](../../tests/flood-timing.test.mjs) fija el método racional con un
+caso cerrado (36 mm/h sobre 1 km² con C = 1 son exactamente 10 m³/s), la linealidad del
+coeficiente, la lámina equivalente, los dos regímenes y el caso sin aporte, que devuelve `Infinity`
+y el panel muestra como "sin aporte".
 
 ## Drenaje y zonas de encharcamiento
 

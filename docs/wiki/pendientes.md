@@ -27,6 +27,18 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
 - Las capas KML y KMZ solo se dibujan en el mapa; no se drapean sobre el modelo 3D.
 - Las capas cargadas viven en memoria: al recargar la página se pierden, porque no hay servidor
   donde guardarlas.
+- El tiempo de llenado usa **toda la zona de influencia** como área aportante, no la cuenca real
+  de la depresión inundada. `hydrology.js` ya calcula direcciones D8 y acumulación: cruzarlo con la
+  máscara de inundación daría el área aportante verdadera y acortaría la sobrestimación.
+- Las cotas de referencia del Orinoco proceden del limnígrafo del INAMEH en Ciudad Bolívar; el DEM
+  es ALOS PALSAR RTC. **No se ha verificado que compartan datum vertical**, así que la comparación
+  es orientativa. Confirmarlo exigiría la documentación del datum de ambos productos.
+- El método racional se aplica a llenados de días, fuera del rango de duraciones para el que fue
+  concebido. Un hidrograma de tormenta o un balance mensual con la serie de lluvia real darían una
+  respuesta mejor, pero exigen datos de lluvia que el repositorio no tiene.
+- Las cifras de lluvia con las que se contrasta el resultado (1.280 mm/año, julio 159 mm) son de
+  fuentes climatológicas públicas de Ciudad Bolívar, no de una serie medida en el área, y viven en
+  la wiki, no en el código. Con curvas IDF locales podrían convertirse en preajustes del panel.
 
 ## Reproducibilidad
 
@@ -55,6 +67,10 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
 
 - `actualMinElevation` y `actualMaxElevation` ya se usan: definen el rango del deslizador de cota.
 - El visor dejó de ser solo de consulta: mide, simula inundación, deriva drenaje y carga capas.
+- La simulación de nivel de agua ya no es solo estática: informa el tiempo de llenado y sitúa la
+  cota frente a los niveles históricos del Orinoco.
+- El deslizador de cota ya no sugiere como plausibles cotas que el río nunca ha alcanzado: las
+  marcas del `<datalist>` y la línea de contexto lo dicen explícitamente.
 
 ## Resuelto en v2.3.0
 

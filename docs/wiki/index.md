@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · encuadre ajustado a la zona de influencia · Sistema v2.3.0
+Actualizada el 2026-09-18 · tiempo de llenado y referencias del Orinoco · Sistema v2.3.0
 
 ## Páginas
 

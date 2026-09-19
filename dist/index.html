@@ -125,14 +125,37 @@
             </header>
             <div class="panel-control">
               <label for="flood-level">Cota simulada <output id="flood-level-value">0,0 m</output></label>
-              <input id="flood-level" type="range" min="0" max="10" step="0.5" value="0">
+              <input id="flood-level" type="range" min="0" max="10" step="0.5" value="0" list="flood-marks">
+              <datalist id="flood-marks"></datalist>
+              <p id="flood-reference" class="result-hint"></p>
             </div>
             <label class="panel-check">
               <input id="flood-connected" type="checkbox">
               Solo agua conectada con el exterior
             </label>
+            <div class="panel-modes" role="group" aria-label="Régimen de llenado">
+              <button id="flood-regime-rain" class="panel-mode is-active" type="button" data-flood-regime="lluvia" aria-pressed="true">Por lluvia</button>
+              <button id="flood-regime-flow" class="panel-mode" type="button" data-flood-regime="caudal" aria-pressed="false">Por caudal</button>
+            </div>
+            <div id="flood-rain-controls">
+              <div class="panel-control">
+                <label for="flood-intensity">Intensidad de lluvia <output id="flood-intensity-value">20 mm/h</output></label>
+                <input id="flood-intensity" type="range" min="1" max="120" step="1" value="20">
+              </div>
+              <div class="panel-control">
+                <label for="flood-runoff">Coeficiente de escorrentía <output id="flood-runoff-value">0,45</output></label>
+                <input id="flood-runoff" type="range" min="0.05" max="0.95" step="0.05" value="0.45">
+              </div>
+            </div>
+            <div id="flood-flow-controls" hidden>
+              <div class="panel-control">
+                <label for="flood-discharge">Caudal de entrada <output id="flood-discharge-value">50 m³/s</output></label>
+                <input id="flood-discharge" type="range" min="0" max="100" step="1" value="43">
+              </div>
+            </div>
             <div id="flood-stats" class="result-stats"></div>
-            <p class="result-note">Estimación sobre un DEM de 25 m suavizado. No sustituye un estudio hidráulico.</p>
+            <p id="flood-assumption" class="result-hint"></p>
+            <p class="result-note">Estimación sobre un DEM de 25 m suavizado. El tiempo sale de un balance de volumen con aporte constante: no considera infiltración, evaporación, propagación de la onda de crecida ni obras. No sustituye un estudio hidráulico.</p>
           </section>
 
           <section id="measure-panel" class="result-panel" aria-label="Medición de distancias y áreas" hidden>
