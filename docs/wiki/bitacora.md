@@ -2,6 +2,19 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Planificación de fotocontrol y red de apoyo · v2.4.0
+
+Nuevo flujo local para preparar el reconocimiento de campo. Propone GCP y checkpoints en áreas o
+corredores, respeta exclusiones, considera accesos y agrega auxiliares cuando el control existente
+queda lejos o no se ha cargado. La red se construye desde el control conocido y añade redundancia
+para estación total o método combinado; las visuales se contrastan con el perfil del DEM.
+
+El mapa muestra puntos tipificados y arrastrables, conexiones, exclusiones y accesos. El panel
+permite fijar, quitar o añadir puntos, cambiar el método de cada observación, guardar en el
+navegador y descargar/reabrir un proyecto portable. Entrega informe imprimible, CSV, PENZD, KML y
+KMZ. Siete pruebas nuevas cubren distribución, exclusiones, corredor, visibilidad, edición,
+persistencia y exportaciones. → [Planificación de campo](planificacion-campo.md)
+
 ## 2026-09-18 — Paneles de resultados minimizables
 
 Los controles del tiempo de llenado dejaron el panel de nivel de agua tan alto que tapaba la mitad

@@ -7,7 +7,7 @@ columnas iguales:
 
 - **Modelo 3D**, a la izquierda, con la barra vertical de coloración, exageración, curvas y cámara.
 - **Imagen satelital**, a la derecha, con controles Leaflet, leyenda y la barra de herramientas de
-  análisis (`.pane-tools`): perfil, medición, capas KML, drenaje y nivel de agua.
+  análisis (`.pane-tools`): perfil, medición, capas KML, plan de campo, drenaje y nivel de agua.
 
 Las etiquetas de panel se colocan lejos de los controles de cada biblioteca. Las lecturas del
 cursor se muestran sobre ambas vistas. Cada herramienta muestra sus resultados en un
@@ -42,6 +42,10 @@ exageración abre un panel pequeño con deslizador. Solo una herramienta de aná
 activa a la vez y su estado se refleja con `aria-pressed`; `Esc` las cierra.
 
 Arrastrar un archivo KML o KMZ sobre el panel satelital lo resalta con `.drop-target` y lo carga.
+
+El planificador usa un panel propio, más ancho y desplazable que los resultados breves. En
+escritorio ocupa la parte derecha del mapa; en móvil se limita a la mitad inferior visible. Su
+cabecera también puede minimizarse para inspeccionar los puntos y conexiones sobre la imagen.
 
 ## Accesibilidad
 

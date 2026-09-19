@@ -39,6 +39,11 @@ export function createSatelliteMap({
     return { x: easting, y: northing, z: sample.z, latlng };
   }
 
+  function toLatLng(point) {
+    const [longitude, latitude] = project(UTM_20N, 'EPSG:4326', [point.x, point.y]);
+    return leaflet.latLng(latitude, longitude);
+  }
+
   function layerGroup(name) {
     if (!groups.has(name)) groups.set(name, leaflet.layerGroup().addTo(map));
     return groups.get(name);
@@ -95,7 +100,15 @@ export function createSatelliteMap({
   function finishDrawing() {
     if (!drawing?.active) return;
     const { config, points, preview } = drawing;
-    if (points.length < 2) return;
+    const minimum = config.modo === 'punto' ? 1 : 2;
+    if (points.length < minimum) return;
+    if (config.modo === 'punto') {
+      drawing.active = false;
+      element.closest('.satellite-pane')?.classList.remove('drawing-active');
+      drawing.group.clearLayers();
+      config.onFinalizar?.(points.slice(), { cerrado: false });
+      return;
+    }
     if (drawing.cerrado) {
       preview?.remove();
       drawing.preview = null;
@@ -179,6 +192,19 @@ export function createSatelliteMap({
     element.closest('.satellite-pane')?.classList.add('drawing-active');
   }
 
+  function beginPoint({ grupo = 'punto', color = BRAND.accent, etiqueta = '', onInstruccion, onFinalizar }) {
+    beginDrawing({
+      modo: 'punto',
+      grupo,
+      color,
+      maxVertices: 1,
+      etiquetas: [etiqueta],
+      snap: false,
+      onInstruccion,
+      onFinalizar: points => onFinalizar?.(points[0])
+    });
+  }
+
   function cancelDrawing() {
     if (drawing) {
       drawing.group.clearLayers();
@@ -225,6 +251,63 @@ export function createSatelliteMap({
     }).addTo(map);
     userLayers.set(id, layer);
     return id;
+  }
+
+  function renderPlanning(plan, projectData, { onMove, onSelect } = {}) {
+    if (!map) return;
+    const group = layerGroup('planificacion');
+    group.clearLayers();
+    const geometry = projectData.geometry ?? [];
+    if (geometry.length >= 2) {
+      const latlngs = geometry.map(toLatLng);
+      const layer = projectData.settings?.tipo === 'area' && geometry.length >= 3
+        ? leaflet.polygon(latlngs, { color: '#f8fafc', weight: 2, dashArray: '8 6', fillOpacity: 0.03 })
+        : leaflet.polyline(latlngs, { color: '#f8fafc', weight: 3, dashArray: '8 6' });
+      layer.addTo(group);
+    }
+    (projectData.exclusions ?? []).forEach(ring => {
+      leaflet.polygon(ring.map(toLatLng), {
+        color: '#ef4444', weight: 2, dashArray: '5 4', fillColor: '#ef4444', fillOpacity: 0.18
+      }).bindTooltip('Zona excluida').addTo(group);
+    });
+    (projectData.accesses ?? []).forEach(line => {
+      leaflet.polyline(line.map(toLatLng), { color: '#facc15', weight: 4, opacity: 0.88 })
+        .bindTooltip('Acceso conocido').addTo(group);
+    });
+    if (!plan) return;
+    const byId = new Map(plan.points.map(point => [point.id, point]));
+    plan.connections.forEach(connection => {
+      const start = byId.get(connection.from);
+      const end = byId.get(connection.to);
+      if (!start || !end) return;
+      leaflet.polyline([toLatLng(start), toLatLng(end)], {
+        color: connection.visible === false ? '#ef4444' : '#22d3ee',
+        weight: 2.5,
+        dashArray: connection.visible === false ? '7 5' : null,
+        opacity: 0.82
+      }).bindTooltip(`${connection.id} · ${connection.method.toUpperCase()} · ${Math.round(connection.distance)} m`)
+        .addTo(group);
+    });
+    plan.points.forEach(point => {
+      const marker = leaflet.marker(toLatLng(point), {
+        draggable: point.role !== 'control',
+        icon: leaflet.divIcon({
+          className: `planning-marker planning-marker-${point.role}`,
+          html: `<span>${point.id}</span>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        }),
+        title: `${point.id} · ${point.roleLabel}`
+      }).addTo(group);
+      marker.bindTooltip(`${point.id} · ${point.roleLabel}<br>${point.reason}`, { direction: 'top' });
+      marker.on('click', () => onSelect?.(point.id));
+      if (point.role !== 'control') {
+        marker.on('dragend', event => {
+          const exact = toExactPoint(event.target.getLatLng());
+          if (exact) onMove?.(point.id, exact);
+        });
+      }
+    });
   }
 
   function setUserLayerVisible(id, visible) {
@@ -345,6 +428,7 @@ export function createSatelliteMap({
     showCursor,
     clearCursor,
     beginDrawing,
+    beginPoint,
     beginProfile,
     cancelDrawing,
     finishDrawing,
@@ -352,6 +436,7 @@ export function createSatelliteMap({
     clearGroup,
     createRaster,
     addUserLayer,
+    renderPlanning,
     setUserLayerVisible,
     removeUserLayer,
     zoomToUserLayer,

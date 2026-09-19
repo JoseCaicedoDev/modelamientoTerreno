@@ -40,6 +40,17 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
   fuentes climatológicas públicas de Ciudad Bolívar, no de una serie medida en el área, y viven en
   la wiki, no en el código. Con curvas IDF locales podrían convertirse en preajustes del panel.
 
+## Planificación de campo
+
+- La intervisibilidad usa el DEM suavizado publicado; no representa edificios, vegetación ni
+  obstáculos temporales. Toda visual se confirma durante el reconocimiento.
+- El CSV de control se interpreta directamente en el CRS UTM del proyecto (`EPSG:32620`); todavía
+  no transforma archivos con otro CRS ni distingue alturas elipsoidales y ortométricas.
+- La red es una propuesta geométrica con comprobaciones de conexión y redundancia. No ajusta
+  observaciones, calcula elipses de error ni certifica precisión.
+- El informe se genera como documento HTML imprimible: el usuario elige **Guardar como PDF** en el
+  diálogo del navegador. No se descarga un PDF binario automáticamente.
+
 ## Reproducibilidad
 
 - El DEM de entrada vive fuera del repositorio y falta documentar una fuente de descarga reproducible.
@@ -49,7 +60,7 @@ Observaciones verificadas que siguen abiertas después de la modularización v2.
 
 - Los logos PNG pesan varios megabytes para el tamaño en que se muestran; deben optimizarse.
 - Las dependencias CDN no incluyen atributos SRI.
-- El núcleo geoespacial tiene pruebas con `node:test`, pero las integraciones Plotly/Leaflet todavía
+- El núcleo geoespacial y el planificador tienen pruebas con `node:test`, pero las integraciones Plotly/Leaflet todavía
   se validan mediante navegador y no forman parte del workflow de GitHub Actions.
 - `terrain-data.js` sigue exponiendo un global porque es una salida generada. Migrarlo a módulo
   requeriría coordinar el script Python y la carga inicial.

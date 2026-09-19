@@ -54,6 +54,13 @@ La captura y las capas A–B pertenecen al adaptador Leaflet; el muestreo perten
 gráfico solo representa resultados. Cerrar el panel, pulsar de nuevo el botón o presionar `Esc`
 limpia la línea y sus marcadores.
 
+## Planificación de campo
+
+El grupo Leaflet `planificacion` representa el área o corredor, exclusiones, accesos, puntos y
+conexiones sin mezclarlos con las demás herramientas. Los puntos propuestos usan marcadores
+arrastrables; al terminar el movimiento se transforman a UTM, toman la elevación de la celda más
+cercana y recalculan red, visuales y alertas. Ver [Planificación de campo](planificacion-campo.md).
+
 ## Diferencia entre las dos imágenes satelitales
 
 - El mapa 2D usa teselas en vivo y permite acercamiento hasta nivel 19.

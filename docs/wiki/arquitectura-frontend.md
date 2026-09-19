@@ -39,6 +39,8 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Relleno de depresiones, direcciones D8, acumulación, cauces y encharcamiento |
 | [`dist/js/domain/kml.js`](../../dist/js/domain/kml.js) | Lectura de KML y conversión a GeoJSON |
 | [`dist/js/domain/kmz.js`](../../dist/js/domain/kmz.js) | Extracción del KML dentro de un KMZ leyendo el ZIP |
+| [`dist/js/domain/planning.js`](../../dist/js/domain/planning.js) | Candidatos, distribución de fotocontrol, red, intervisibilidad y diagnósticos |
+| [`dist/js/domain/planning-export.js`](../../dist/js/domain/planning-export.js) | CSV, PENZD, KML/KMZ, proyecto portable e informe imprimible |
 | [`dist/js/adapters/terrain-plot.js`](../../dist/js/adapters/terrain-plot.js) | Trazas, escena y operaciones Plotly |
 | [`dist/js/adapters/satellite-map.js`](../../dist/js/adapters/satellite-map.js) | Capas Leaflet, marcador sincronizado, dibujo genérico y capas del usuario |
 | [`dist/js/adapters/raster-overlay.js`](../../dist/js/adapters/raster-overlay.js) | Capa canvas propia para pintar rásteres derivados de la malla |
@@ -46,6 +48,7 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/ui/tool-controller.js`](../../dist/js/ui/tool-controller.js) | Herramienta activa exclusiva y estado de sus botones |
 | [`dist/js/ui/result-panel.js`](../../dist/js/ui/result-panel.js) | Mostrar, ocultar, minimizar y llenar los paneles de resultados |
 | [`dist/js/ui/layers-panel.js`](../../dist/js/ui/layers-panel.js) | Lista de capas del usuario con mostrar, encuadrar y quitar |
+| [`dist/js/ui/planning-controller.js`](../../dist/js/ui/planning-controller.js) | Estado, edición, persistencia y exportación del plan de campo |
 
 ## Infraestructura compartida por las herramientas
 
@@ -77,11 +80,11 @@ conecta eventos y actualiza el estado visible de los controles.
 
 ## Pruebas
 
-[`tests/terrain-model.test.mjs`](../../tests/terrain-model.test.mjs) usa `node:test` y cubre la
-búsqueda espacial, el muestreo del perfil y la triangulación. Se ejecuta sin instalar paquetes:
+Las pruebas `node:test` cubren terreno, geometría, medición, hidrología, inundación, KML/KMZ,
+tiempos de llenado y planificación de campo. Se ejecutan sin instalar paquetes:
 
 ```powershell
-node --test tests\terrain-model.test.mjs
+node --test tests\*.test.mjs
 ```
 
 Las integraciones con Plotly y Leaflet se verifican en navegador porque dependen de WebGL, DOM y

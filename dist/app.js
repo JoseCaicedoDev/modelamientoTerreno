@@ -26,6 +26,7 @@ import { createProfileChart } from './js/ui/profile-chart.js';
 import { createToolController } from './js/ui/tool-controller.js';
 import { createResultPanel } from './js/ui/result-panel.js';
 import { createLayersPanel } from './js/ui/layers-panel.js';
+import { createPlanningController } from './js/ui/planning-controller.js';
 
 const byId = id => document.getElementById(id);
 
@@ -93,6 +94,8 @@ const elements = Object.freeze({
   layersList: byId('layers-list'),
   layersEmpty: byId('layers-empty'),
   layersError: byId('layers-error'),
+  planningTool: byId('planning-tool'),
+  planningPanel: byId('planning-panel'),
   resetCamera: byId('reset-camera'),
   touchHint: byId('touch-hint'),
   summaryElevation: byId('summary-elevation'),
@@ -149,6 +152,30 @@ function startApplication() {
     nearestPoint: terrain.nearestPoint,
     onPointer: showSynchronizedCursor,
     onPointerLeave: scheduleCursorClear
+  });
+
+  const initialPlanningGeometry = data.boundary.slice(0, -1).map(([latitude, longitude]) => {
+    const [x, y] = window.proj4('EPSG:4326', UTM_20N, [longitude, latitude]);
+    return { x, y };
+  });
+  const planning = createPlanningController({
+    panel: elements.planningPanel,
+    satelliteMap,
+    terrain,
+    grid,
+    data,
+    project: {
+      name: 'Plan de fotocontrol y red de apoyo',
+      geometry: initialPlanningGeometry,
+      exclusions: [],
+      accesses: [],
+      controls: [],
+      fixedPoints: [],
+      connectionMethods: {},
+      settings: { tipo: 'area', metodo: 'combinado', alternativa: 'cobertura', gcp: 5, checkpoints: 2 }
+    },
+    setInstruction,
+    onClose: () => tools.deactivateAll()
   });
 
   const profilePanel = createResultPanel({
@@ -574,6 +601,13 @@ function startApplication() {
   });
   elements.layersPanel.addEventListener('click', event => event.stopPropagation());
 
+  tools.register('planificacion', {
+    button: elements.planningTool,
+    activate: () => planning.show(),
+    deactivate: () => planning.hide()
+  });
+  elements.planningTool.addEventListener('click', () => tools.toggle('planificacion'));
+
   // Arrastrar y soltar sobre el panel satelital.
   ['dragenter', 'dragover'].forEach(type => {
     elements.satellitePane.addEventListener(type, event => {
@@ -702,6 +736,7 @@ function startApplication() {
       if (parameters.get('conectado') === 'si') elements.floodConnected.checked = true;
     }
     tools.activate(herramienta);
+    if (herramienta === 'planificacion' && parameters.get('propuesta') === 'si') planning.generate();
   }
 
   window.setTimeout(() => { elements.touchHint.style.opacity = '0'; }, 3600);

@@ -53,6 +53,9 @@
             <button id="layers-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Cargar capas KML o KMZ" data-tooltip="Capas KML">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
             </button>
+            <button id="planning-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Planificar fotocontrol y red de apoyo" data-tooltip="Plan de campo">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5l6-2 4 2 6-2v16l-6 2-4-2-6 2Z"/><path d="M10 3v16M14 5v16"/><circle cx="14" cy="11" r="2.3"/></svg>
+            </button>
             <button id="drainage-tool" class="tool-button" type="button" aria-pressed="false" aria-label="Analizar drenaje y encharcamiento" data-tooltip="Drenaje y encharcamiento">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c-1.5 3-5 5.5-5 9a5 5 0 0 0 10 0c0-3.5-3.5-6-5-9Z"/><path d="M4 20h16"/></svg>
             </button>
@@ -99,6 +102,88 @@
             <ul id="layers-list" class="layers-list"></ul>
             <p id="layers-empty" class="result-note">Arrastra un archivo <code>.kml</code> o <code>.kmz</code> sobre el mapa, o usa el botón. Las capas viven solo en esta sesión.</p>
             <p id="layers-error" class="result-note result-error" hidden></p>
+          </section>
+
+          <section id="planning-panel" class="planning-panel" aria-label="Planificación de fotocontrol y red de apoyo" hidden>
+            <header class="result-header">
+              <div>
+                <span class="result-overline">PLAN DE CAMPO</span>
+                <h2>Fotocontrol y red de apoyo</h2>
+              </div>
+              <div class="result-actions">
+                <button id="planning-collapse" class="result-collapse" type="button" aria-label="Minimizar planificación" aria-expanded="true" title="Minimizar para ver el mapa">–</button>
+                <button id="planning-close" class="result-close" type="button" aria-label="Cerrar planificación">×</button>
+              </div>
+            </header>
+            <div class="planning-body">
+              <div class="planning-form-grid">
+                <label class="planning-field planning-field-wide">Proyecto
+                  <input id="planning-name" type="text" value="Plan de fotocontrol y red de apoyo">
+                </label>
+                <label class="planning-field">Geometría
+                  <select id="planning-type"><option value="area">Área</option><option value="corredor">Corredor</option></select>
+                </label>
+                <label class="planning-field">Método
+                  <select id="planning-method"><option value="combinado">Combinado</option><option value="gnss">GNSS</option><option value="estacion">Estación total</option></select>
+                </label>
+                <label class="planning-field">Alternativa
+                  <select id="planning-alternative"><option value="cobertura">Mejor cobertura</option><option value="economico">Menos puntos</option></select>
+                </label>
+                <label class="planning-field">GCP
+                  <input id="planning-gcp" type="number" min="3" max="20" value="5">
+                </label>
+                <label class="planning-field">Checkpoints
+                  <input id="planning-checkpoints" type="number" min="1" max="10" value="2">
+                </label>
+              </div>
+
+              <div class="planning-actions planning-actions-setup">
+                <button id="planning-draw-geometry" type="button">Dibujar área</button>
+                <button id="planning-draw-exclusion" type="button">+ Exclusión</button>
+                <button id="planning-draw-access" type="button">+ Acceso</button>
+                <button id="planning-add-control" type="button">+ Control</button>
+                <button id="planning-controls-file" type="button">CSV control</button>
+                <input id="planning-controls-input" type="file" accept=".csv,.txt" hidden>
+              </div>
+
+              <button id="planning-generate" class="planning-primary" type="button">Generar propuesta</button>
+              <p id="planning-error" class="planning-message" hidden></p>
+              <div id="planning-stats" class="planning-stats" aria-label="Resumen del plan"></div>
+              <ul id="planning-warnings" class="planning-alerts"></ul>
+
+              <div class="planning-actions planning-edit-actions">
+                <button id="planning-add-gcp" type="button">+ GCP</button>
+                <button id="planning-add-checkpoint" type="button">+ Checkpoint</button>
+                <button id="planning-add-auxiliary" type="button">+ Auxiliar</button>
+              </div>
+
+              <details class="planning-details" open>
+                <summary>Puntos del plan</summary>
+                <ul id="planning-points" class="planning-points"></ul>
+              </details>
+              <details class="planning-details">
+                <summary>Conexiones recomendadas</summary>
+                <ul id="planning-connections" class="planning-connections"></ul>
+              </details>
+
+              <div id="planning-exports" class="planning-export-grid" hidden>
+                <button type="button" data-planning-export="pdf">Informe / PDF</button>
+                <button type="button" data-planning-export="csv">Puntos CSV</button>
+                <button type="button" data-planning-export="penzd">PENZD</button>
+                <button type="button" data-planning-export="observaciones">Conexiones CSV</button>
+                <button type="button" data-planning-export="kml">KML</button>
+                <button type="button" data-planning-export="kmz">KMZ</button>
+              </div>
+
+              <div class="planning-project-actions">
+                <button id="planning-save" type="button">Guardar aquí</button>
+                <button id="planning-restore" type="button">Recuperar</button>
+                <button id="planning-export-project" type="button">Descargar proyecto</button>
+                <button id="planning-project-file" type="button">Abrir proyecto</button>
+                <input id="planning-project-input" type="file" accept=".json,.gestiagro.json" hidden>
+              </div>
+              <p class="result-note">Las coordenadas son propuestas. Confirma acceso, seguridad, estabilidad, visibilidad y precisión antes de materializar.</p>
+            </div>
           </section>
 
           <section id="drainage-panel" class="result-panel" aria-label="Drenaje y encharcamiento" hidden>
@@ -214,7 +299,7 @@
 
       <div class="viewer-meta">
         <span id="source-label">DEM SRTMGL1 · ALOS PALSAR RTC ALPSRP274680160</span>
-        <span>Gestiagro © 2026 · Sistema v2.3.0</span>
+        <span>Gestiagro © 2026 · Sistema v2.4.0</span>
       </div>
       <div id="loading" class="loading" aria-live="polite">
         <div class="loading-mark"></div>

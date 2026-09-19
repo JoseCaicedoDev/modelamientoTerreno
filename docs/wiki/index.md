@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · paneles minimizables · Sistema v2.3.0
+Actualizada el 2026-09-18 · planificación de fotocontrol y red de apoyo · Sistema v2.4.0
 
 ## Páginas
 
@@ -16,6 +16,7 @@ Actualizada el 2026-09-18 · paneles minimizables · Sistema v2.3.0
 | [Formato de terrain-data.js](formato-terrain-data.md) | Claves del payload, tipos, rangos y significado |
 | [Visor 3D](visor-3d.md) | `dist/app.js` — superficie Plotly, malla satelital, cámara, controles |
 | [Herramientas de análisis](herramientas-analisis.md) | Perfil, medición y demás herramientas interactivas |
+| [Planificación de campo](planificacion-campo.md) | Propuesta de GCP, checkpoints, red de apoyo, edición y entregables |
 | [Vista satelital](vista-satelital.md) | Mapa Leaflet, teselas Esri, capas del polígono |
 | [Interfaz y marca](interfaz-y-marca.md) | `index.html`, `styles.css`, sistema visual Gestiagro |
 | [Despliegue](despliegue.md) | GitHub Pages y el workflow de publicación |

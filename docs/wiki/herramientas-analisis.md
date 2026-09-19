@@ -29,6 +29,14 @@ Los botones viven en `.pane-tools`, arriba a la izquierda del panel satelital
 | Tiempo de llenado | [`domain/flood-timing.js`](../../dist/js/domain/flood-timing.js) | Implementada |
 | Drenaje y encharcamiento | [`domain/hydrology.js`](../../dist/js/domain/hydrology.js) | Implementada |
 | Capas KML y KMZ del usuario | [`domain/kml.js`](../../dist/js/domain/kml.js), [`domain/kmz.js`](../../dist/js/domain/kmz.js) | Implementada |
+| Planificación de fotocontrol y red | [`domain/planning.js`](../../dist/js/domain/planning.js) | Implementada |
+
+## Planificación de campo
+
+Propone y permite editar GCP, checkpoints y puntos auxiliares sobre el mapa; construye conexiones
+GNSS, de estación total o nivelación y revisa intervisibilidad indicativa sobre el DEM. Guarda el
+proyecto localmente y entrega informe imprimible, CSV, PENZD, KML y KMZ. El alcance y los algoritmos
+se documentan en [Planificación de campo](planificacion-campo.md).
 
 ## Perfil topográfico
 

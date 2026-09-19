@@ -10,6 +10,8 @@ Incluye:
 - Rotación, inclinación y acercamiento interactivos.
 - Vista simultánea 3D y satelital con seguimiento de coordenadas sincronizado.
 - Perfil topográfico A–B calculado sobre el DEM.
+- Planificación de GCP, checkpoints y red topográfica de apoyo con edición sobre el mapa.
+- Proyecto local y entregables de campo en informe imprimible, CSV, PENZD, KML y KMZ.
 
 El contenido publicado se encuentra en `dist/` y se despliega automáticamente con GitHub Pages.
 
@@ -27,5 +29,5 @@ El contenido publicado se encuentra en `dist/` y se despliega automáticamente c
 ## Verificación
 
 ```powershell
-node --test tests\terrain-model.test.mjs
+node --test tests\*.test.mjs
 ```

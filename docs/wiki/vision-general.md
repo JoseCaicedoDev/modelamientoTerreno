@@ -5,7 +5,8 @@
 Un visor web estático que muestra el relieve del área de estudio en 3D interactivo junto a una
 vista satelital 2D sincronizada. Permite consultar coordenadas UTM y elevación en ambas vistas,
 cambiar la coloración del terreno y obtener perfiles topográficos a partir de líneas dibujadas en
-el mapa. No hay backend: GitHub Pages sirve directamente los archivos de `dist/`.
+el mapa. También prepara planes preliminares de fotocontrol y red topográfica de apoyo con
+entregables de campo. No hay backend: GitHub Pages sirve directamente los archivos de `dist/`.
 
 Publicado en <https://jose.caicedo.dev/modelamientoTerreno/>.
 
