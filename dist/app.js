@@ -49,14 +49,17 @@ const elements = Object.freeze({
   profileChart: byId('profile-chart'),
   profileStats: byId('profile-stats'),
   profileClose: byId('profile-close'),
+  profileCollapse: byId('profile-collapse'),
   measureTool: byId('measure-tool'),
   measurePanel: byId('measure-panel'),
   measureStats: byId('measure-stats'),
   measureClose: byId('measure-close'),
+  measureCollapse: byId('measure-collapse'),
   floodTool: byId('flood-tool'),
   floodPanel: byId('flood-panel'),
   floodStats: byId('flood-stats'),
   floodClose: byId('flood-close'),
+  floodCollapse: byId('flood-collapse'),
   floodLevel: byId('flood-level'),
   floodLevelValue: byId('flood-level-value'),
   floodConnected: byId('flood-connected'),
@@ -76,6 +79,7 @@ const elements = Object.freeze({
   drainagePanel: byId('drainage-panel'),
   drainageStats: byId('drainage-stats'),
   drainageClose: byId('drainage-close'),
+  drainageCollapse: byId('drainage-collapse'),
   drainageThreshold: byId('drainage-threshold'),
   drainageThresholdValue: byId('drainage-threshold-value'),
   drainageDepth: byId('drainage-depth'),
@@ -83,6 +87,7 @@ const elements = Object.freeze({
   layersTool: byId('layers-tool'),
   layersPanel: byId('layers-panel'),
   layersClose: byId('layers-close'),
+  layersCollapse: byId('layers-collapse'),
   layersAdd: byId('layers-add'),
   layersInput: byId('layers-input'),
   layersList: byId('layers-list'),
@@ -152,6 +157,7 @@ function startApplication() {
     pane: elements.satellitePane,
     visibleClass: 'panel-visible',
     closeButton: elements.profileClose,
+    collapseButton: elements.profileCollapse,
     onClose: () => tools.deactivateAll()
   });
 
@@ -217,6 +223,7 @@ function startApplication() {
     pane: elements.satellitePane,
     visibleClass: 'panel-visible',
     closeButton: elements.measureClose,
+    collapseButton: elements.measureCollapse,
     onClose: () => tools.deactivateAll()
   });
 
@@ -248,6 +255,7 @@ function startApplication() {
     pane: elements.satellitePane,
     visibleClass: 'panel-visible',
     closeButton: elements.floodClose,
+    collapseButton: elements.floodCollapse,
     onClose: () => tools.deactivateAll()
   });
 
@@ -415,6 +423,7 @@ function startApplication() {
     pane: elements.satellitePane,
     visibleClass: 'panel-visible',
     closeButton: elements.drainageClose,
+    collapseButton: elements.drainageCollapse,
     onClose: () => tools.deactivateAll()
   });
 
@@ -498,6 +507,7 @@ function startApplication() {
     pane: elements.satellitePane,
     visibleClass: 'panel-visible',
     closeButton: elements.layersClose,
+    collapseButton: elements.layersCollapse,
     onClose: () => tools.deactivateAll()
   });
 

@@ -44,7 +44,7 @@ conecta eventos y actualiza el estado visible de los controles.
 | [`dist/js/adapters/raster-overlay.js`](../../dist/js/adapters/raster-overlay.js) | Capa canvas propia para pintar rásteres derivados de la malla |
 | [`dist/js/ui/profile-chart.js`](../../dist/js/ui/profile-chart.js) | Representación SVG y estadísticas del perfil topográfico |
 | [`dist/js/ui/tool-controller.js`](../../dist/js/ui/tool-controller.js) | Herramienta activa exclusiva y estado de sus botones |
-| [`dist/js/ui/result-panel.js`](../../dist/js/ui/result-panel.js) | Mostrar, ocultar y llenar los paneles de resultados |
+| [`dist/js/ui/result-panel.js`](../../dist/js/ui/result-panel.js) | Mostrar, ocultar, minimizar y llenar los paneles de resultados |
 | [`dist/js/ui/layers-panel.js`](../../dist/js/ui/layers-panel.js) | Lista de capas del usuario con mostrar, encuadrar y quitar |
 
 ## Infraestructura compartida por las herramientas

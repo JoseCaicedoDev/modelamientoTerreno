@@ -5,6 +5,19 @@ Herramientas interactivas del panel satelital. Todas se coordinan con
 vez**, y muestran sus resultados en un panel construido con
 [`ui/result-panel.js`](../../dist/js/ui/result-panel.js). `Escape` cierra cualquiera de ellas.
 
+## Minimizar el panel
+
+Los paneles ocupan hasta 560 px de ancho sobre la imagen satelital, y el de nivel de agua es el más
+alto de todos. Cada cabecera lleva por eso dos botones: `–` minimiza y `×` cierra.
+
+Minimizado, el panel conserva la cabecera y el control marcado con `.panel-control-essential`, que
+hoy es solo el deslizador de cota del nivel de agua: **se puede mover el agua mientras se mira el
+mapa despejado**, que es para lo que sirve el modo. El resto de paneles quedan como una barra de
+título de 340 px. El estado es de cada panel y persiste mientras la herramienta siga abierta.
+
+`setCollapsed` y el captador `collapsed` forman parte de la API del panel; el botón está cableado
+en [`app.js`](../../dist/app.js) para las cinco herramientas.
+
 Los botones viven en `.pane-tools`, arriba a la izquierda del panel satelital
 ([`index.html:46`](../../dist/index.html#L46)).
 

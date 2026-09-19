@@ -506,6 +506,54 @@ input[type="range"] {
 
 .result-close:hover { color: white; border-color: var(--brand-light); }
 
+.result-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.result-collapse {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0 0 3px;
+  border: 1px solid var(--gray-700);
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.72);
+  color: var(--gray-300);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.result-collapse:hover { color: white; border-color: var(--brand-light); }
+
+/* Minimizado: queda la cabecera y el control esencial de la herramienta, para que el panel deje
+   ver el mapa sin perder el mando con el que se está planificando. */
+.result-panel.is-collapsed {
+  width: min(340px, calc(100% - 36px));
+  padding-bottom: 12px;
+}
+
+.result-panel.is-collapsed > *:not(.result-header):not(.panel-control-essential) { display: none; }
+
+.result-panel.is-collapsed .result-header { margin-bottom: 8px; }
+
+.result-panel.is-collapsed .panel-control-essential { margin-bottom: 0; }
+
+.result-panel.is-collapsed .panel-control-essential > *:not(label):not(input) { display: none; }
+
+/* Los dos parámetros de lluvia caben en una fila: el panel no debe crecer por ellos. */
+.panel-control-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* `display: grid` ganaría al atributo `hidden` del UA. */
+.panel-control-row[hidden] { display: none; }
+
+
 .profile-chart {
   display: block;
   width: 100%;
@@ -1135,6 +1183,8 @@ input[type="range"] {
 }
 
 .result-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .panel-control-row { grid-template-columns: 1fr; gap: 0; }
 
   .panel-mode { font-size: 9px; padding: 8px 6px; }
 

@@ -74,7 +74,10 @@
                 <span class="result-overline">ANÁLISIS DEL TERRENO</span>
                 <h2>Perfil topográfico</h2>
               </div>
-              <button id="profile-close" class="result-close" type="button" aria-label="Cerrar perfil topográfico">×</button>
+              <div class="result-actions">
+                <button id="profile-collapse" class="result-collapse" type="button" aria-label="Minimizar perfil topográfico" aria-expanded="true" title="Minimizar para ver el mapa">–</button>
+                <button id="profile-close" class="result-close" type="button" aria-label="Cerrar perfil topográfico">×</button>
+              </div>
             </header>
             <svg id="profile-chart" class="profile-chart" viewBox="0 0 640 210" role="img" aria-label="Gráfico del perfil topográfico"></svg>
             <div id="profile-stats" class="result-stats"></div>
@@ -86,7 +89,10 @@
                 <span class="result-overline">CAPAS DEL USUARIO</span>
                 <h2>Archivos KML y KMZ</h2>
               </div>
-              <button id="layers-close" class="result-close" type="button" aria-label="Cerrar capas del usuario">×</button>
+              <div class="result-actions">
+                <button id="layers-collapse" class="result-collapse" type="button" aria-label="Minimizar capas del usuario" aria-expanded="true" title="Minimizar para ver el mapa">–</button>
+                <button id="layers-close" class="result-close" type="button" aria-label="Cerrar capas del usuario">×</button>
+              </div>
             </header>
             <button id="layers-add" class="panel-button" type="button">Cargar archivo KML o KMZ</button>
             <input id="layers-input" type="file" accept=".kml,.kmz" multiple hidden>
@@ -101,7 +107,10 @@
                 <span class="result-overline">ANÁLISIS DEL TERRENO</span>
                 <h2>Drenaje y encharcamiento</h2>
               </div>
-              <button id="drainage-close" class="result-close" type="button" aria-label="Cerrar análisis de drenaje">×</button>
+              <div class="result-actions">
+                <button id="drainage-collapse" class="result-collapse" type="button" aria-label="Minimizar análisis de drenaje" aria-expanded="true" title="Minimizar para ver el mapa">–</button>
+                <button id="drainage-close" class="result-close" type="button" aria-label="Cerrar análisis de drenaje">×</button>
+              </div>
             </header>
             <div class="panel-control">
               <label for="drainage-threshold">Cuenca mínima del cauce <output id="drainage-threshold-value">5 ha</output></label>
@@ -121,9 +130,12 @@
                 <span class="result-overline">ANÁLISIS DEL TERRENO</span>
                 <h2>Nivel de agua</h2>
               </div>
-              <button id="flood-close" class="result-close" type="button" aria-label="Cerrar simulación de nivel de agua">×</button>
+              <div class="result-actions">
+                <button id="flood-collapse" class="result-collapse" type="button" aria-label="Minimizar simulación de nivel de agua" aria-expanded="true" title="Minimizar para ver el mapa">–</button>
+                <button id="flood-close" class="result-close" type="button" aria-label="Cerrar simulación de nivel de agua">×</button>
+              </div>
             </header>
-            <div class="panel-control">
+            <div class="panel-control panel-control-essential">
               <label for="flood-level">Cota simulada <output id="flood-level-value">0,0 m</output></label>
               <input id="flood-level" type="range" min="0" max="10" step="0.5" value="0" list="flood-marks">
               <datalist id="flood-marks"></datalist>
@@ -137,13 +149,13 @@
               <button id="flood-regime-rain" class="panel-mode is-active" type="button" data-flood-regime="lluvia" aria-pressed="true">Por lluvia</button>
               <button id="flood-regime-flow" class="panel-mode" type="button" data-flood-regime="caudal" aria-pressed="false">Por caudal</button>
             </div>
-            <div id="flood-rain-controls">
+            <div id="flood-rain-controls" class="panel-control-row">
               <div class="panel-control">
-                <label for="flood-intensity">Intensidad de lluvia <output id="flood-intensity-value">20 mm/h</output></label>
+                <label for="flood-intensity">Intensidad <output id="flood-intensity-value">20 mm/h</output></label>
                 <input id="flood-intensity" type="range" min="1" max="120" step="1" value="20">
               </div>
               <div class="panel-control">
-                <label for="flood-runoff">Coeficiente de escorrentía <output id="flood-runoff-value">0,45</output></label>
+                <label for="flood-runoff">Escorrentía <output id="flood-runoff-value">0,45</output></label>
                 <input id="flood-runoff" type="range" min="0.05" max="0.95" step="0.05" value="0.45">
               </div>
             </div>
@@ -164,7 +176,10 @@
                 <span class="result-overline">ANÁLISIS DEL TERRENO</span>
                 <h2>Distancias y áreas</h2>
               </div>
-              <button id="measure-close" class="result-close" type="button" aria-label="Cerrar medición">×</button>
+              <div class="result-actions">
+                <button id="measure-collapse" class="result-collapse" type="button" aria-label="Minimizar medición" aria-expanded="true" title="Minimizar para ver el mapa">–</button>
+                <button id="measure-close" class="result-close" type="button" aria-label="Cerrar medición">×</button>
+              </div>
             </header>
             <div id="measure-stats" class="result-stats"></div>
             <p class="result-note">El área real se estima con la pendiente media de las celdas del DEM (25 m). Valor indicativo.</p>

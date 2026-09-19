@@ -2,6 +2,18 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Paneles de resultados minimizables
+
+Los controles del tiempo de llenado dejaron el panel de nivel de agua tan alto que tapaba la mitad
+de la imagen satelital. Las cinco cabeceras ganan un botón `–` que minimiza el panel a la cabecera
+más el control esencial de la herramienta; el de nivel de agua conserva así el deslizador de cota y
+permite mover el agua con el mapa a la vista.
+
+`createResultPanel` acepta `collapseButton` y expone `setCollapsed` y `collapsed`. Además, la
+intensidad de lluvia y el coeficiente de escorrentía pasan a una sola fila de dos columnas
+(`.panel-control-row`), que vuelve a una columna por debajo de 760 px.
+→ [Herramientas de análisis](herramientas-analisis.md)
+
 ## 2026-09-18 — Tiempo de llenado y referencias del Orinoco
 
 El panel de nivel de agua deja de responder solo "cuánta agua" y responde también "en cuánto
