@@ -22,8 +22,13 @@ Las advertencias anteponen una etiqueta *Corregir · Revisar · Nota*, las obser
 visual está libre u obstruida, los mensajes de éxito ya no se pintan de rojo (`.planning-message.is-ok`)
 y los seis entregables se separan en *Para la comisión de campo* y *Para la oficina*, con las
 descargas ocultas hasta que exista propuesta. Los tamaños de texto de 8–9 px suben a 10–12 px y los
-botones de fila a 30 px de alto. → [Planificación de campo](planificacion-campo.md) ·
-[Interfaz y marca](interfaz-y-marca.md)
+botones de fila a 30 px de alto.
+
+El panel deja además la esquina superior derecha y se ancla abajo a la derecha como los paneles de
+análisis: `display: flex` con cabecera fija y cuerpo desplazable, `bottom: 52px` en escritorio y
+ancho completo al 68 % de altura en móvil. Al abrirse añade `panel-visible` al panel satelital, de
+modo que oculta la leyenda como el resto de herramientas.
+→ [Planificación de campo](planificacion-campo.md) · [Interfaz y marca](interfaz-y-marca.md)
 
 ## 2026-09-18 — Planificación de fotocontrol y red de apoyo · v2.4.0
 

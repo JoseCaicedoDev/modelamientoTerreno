@@ -160,6 +160,7 @@ function startApplication() {
   });
   const planning = createPlanningController({
     panel: elements.planningPanel,
+    pane: elements.satellitePane,
     satelliteMap,
     terrain,
     grid,

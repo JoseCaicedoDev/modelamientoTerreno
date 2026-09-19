@@ -43,9 +43,12 @@ activa a la vez y su estado se refleja con `aria-pressed`; `Esc` las cierra.
 
 Arrastrar un archivo KML o KMZ sobre el panel satelital lo resalta con `.drop-target` y lo carga.
 
-El planificador usa un panel propio, más ancho y desplazable que los resultados breves. En
-escritorio ocupa la parte derecha del mapa; en móvil se limita a la mitad inferior visible. Su
-cabecera también puede minimizarse para inspeccionar los puntos y conexiones sobre la imagen.
+El planificador usa un panel propio, más ancho y desplazable que los resultados breves, pero se
+ancla donde los demás: abajo a la derecha del panel satelital (`bottom: 52px`), sobre la barra de
+atribución y por encima de los controles de Leaflet. Es una caja flexible cuya cabecera queda fija
+y cuyo cuerpo se desplaza; en móvil ocupa el ancho completo y el 68 % de la altura, igual que un
+`.result-panel`. Mientras está abierto oculta la leyenda —comparten el borde inferior— y su
+cabecera puede minimizarse para inspeccionar los puntos y conexiones sobre la imagen.
 
 Su cuerpo se organiza en una lista `.planning-steps` de cuatro pasos numerados, cada uno con título,
 frase de ayuda y sus controles. Los textos de apoyo miden 10,5–11 px y los datos de cada punto

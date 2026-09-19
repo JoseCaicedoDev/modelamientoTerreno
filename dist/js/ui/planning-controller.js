@@ -101,6 +101,7 @@ function button(label, className, onClick, { title, ariaLabel, pressed } = {}) {
 
 export function createPlanningController({
   panel,
+  pane,
   satelliteMap,
   terrain,
   grid,
@@ -569,8 +570,18 @@ export function createPlanningController({
   render();
 
   return Object.freeze({
-    show() { panel.hidden = false; render(); },
-    hide() { panel.hidden = true; satelliteMap.cancelDrawing(); setInstruction(null); },
+    show() {
+      panel.hidden = false;
+      // La leyenda comparte el borde inferior del mapa: se retira como con los demás paneles.
+      pane?.classList.add('panel-visible');
+      render();
+    },
+    hide() {
+      panel.hidden = true;
+      pane?.classList.remove('panel-visible');
+      satelliteMap.cancelDrawing();
+      setInstruction(null);
+    },
     generate,
     get project() { return currentProject; },
     get plan() { return currentPlan; }
