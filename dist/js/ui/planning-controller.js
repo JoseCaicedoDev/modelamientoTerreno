@@ -20,6 +20,30 @@ import {
 const STORAGE_KEY = 'gestiagro.planificacion.v1';
 const COLORS = Object.freeze({ area: '#f8fafc', exclusion: '#ef4444', access: '#facc15', control: '#22c55e', gcp: '#f59e0b', checkpoint: '#a78bfa', auxiliar: '#22d3ee' });
 
+// Los grupos ordenan la lista como se recorre el trabajo: primero lo que ya existe, después lo
+// propuesto. La descripción explica para qué sirve cada rol sin obligar a abrir la documentación.
+const ROLE_GROUPS = Object.freeze([
+  { role: 'control', title: 'Control conocido', hint: 'Coordenadas ya establecidas; el plan se amarra a ellas.' },
+  { role: 'gcp', title: 'Puntos de control (GCP)', hint: 'Fijan el vuelo al terreno durante el ajuste.' },
+  { role: 'checkpoint', title: 'Puntos de chequeo', hint: 'Solo verifican la precisión; no entran en el ajuste.' },
+  { role: 'auxiliar', title: 'Puntos auxiliares', hint: 'Apoyan la red cuando el control queda lejos.' }
+]);
+
+// El dominio usa etiquetas cortas; en pantalla se explican en lenguaje de campo.
+const ACCESS_LABELS = Object.freeze({
+  'No evaluado': 'Acceso por verificar',
+  'Próximo a acceso': 'Cerca de un acceso',
+  'Revisar acceso': 'Lejos del acceso dibujado'
+});
+
+const METHOD_LABELS = Object.freeze({ gnss: 'GNSS', estacion: 'Estación total', nivelacion: 'Nivelación' });
+
+const SEVERITY_TAGS = Object.freeze({ error: 'Corregir', warning: 'Revisar', info: 'Nota' });
+
+function plural(count, singular, many) {
+  return `${count} ${count === 1 ? singular : many}`;
+}
+
 function download(content, filename, type = 'text/plain;charset=utf-8') {
   const blob = content instanceof Blob ? content : new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -63,11 +87,14 @@ function parseControlCsv(text) {
   }).filter(Boolean);
 }
 
-function button(label, className, onClick) {
+function button(label, className, onClick, { title, ariaLabel, pressed } = {}) {
   const element = document.createElement('button');
   element.type = 'button';
   element.className = className;
   element.textContent = label;
+  if (title) element.title = title;
+  if (ariaLabel) element.setAttribute('aria-label', ariaLabel);
+  if (pressed !== undefined) element.setAttribute('aria-pressed', String(pressed));
   element.addEventListener('click', onClick);
   return element;
 }
@@ -108,8 +135,12 @@ export function createPlanningController({
     stats: byId('planning-stats'),
     warnings: byId('planning-warnings'),
     points: byId('planning-points'),
+    pointsCount: byId('planning-points-count'),
     connections: byId('planning-connections'),
+    connectionsCount: byId('planning-connections-count'),
+    contextCount: byId('planning-context-count'),
     exports: byId('planning-exports'),
+    exportsEmpty: byId('planning-exports-empty'),
     close: byId('planning-close'),
     collapse: byId('planning-collapse'),
     body: panel.querySelector('.planning-body'),
@@ -118,10 +149,16 @@ export function createPlanningController({
   const context = { terrain, grid };
   let currentProject = project;
   let currentPlan = null;
+  let selectedPointId = null;
 
-  function showError(message) {
+  function showMessage(message, tone = 'error') {
     elements.error.textContent = message || '';
     elements.error.hidden = !message;
+    elements.error.classList.toggle('is-ok', Boolean(message) && tone === 'ok');
+  }
+
+  function showError(message) {
+    showMessage(message, 'error');
   }
 
   function syncProjectFromForm() {
@@ -148,15 +185,36 @@ export function createPlanningController({
     elements.alternative.value = settings.alternativa;
     elements.gcp.value = settings.gcp;
     elements.checkpoints.value = settings.checkpoints;
-    elements.drawGeometry.textContent = settings.tipo === 'corredor' ? 'Dibujar eje del corredor' : 'Dibujar área';
+    elements.drawGeometry.textContent = settings.tipo === 'corredor' ? 'Dibujar eje' : 'Redibujar área';
+  }
+
+  function statTile(value, label) {
+    return `<span><strong>${value}</strong>${label}</span>`;
   }
 
   function renderStats() {
     if (!currentPlan) {
-      elements.stats.innerHTML = `<span><strong>${currentProject.controls?.length ?? 0}</strong> controles</span><span><strong>${currentProject.exclusions?.length ?? 0}</strong> exclusiones</span><span><strong>${currentProject.accesses?.length ?? 0}</strong> accesos</span>`;
+      elements.stats.innerHTML = statTile(currentProject.controls?.length ?? 0, 'controles conocidos')
+        + statTile(currentProject.exclusions?.length ?? 0, 'zonas excluidas')
+        + statTile(currentProject.accesses?.length ?? 0, 'vías de acceso');
       return;
     }
-    elements.stats.innerHTML = `<span><strong>${currentPlan.stats.gcp}</strong> GCP</span><span><strong>${currentPlan.stats.checkpoint}</strong> checkpoints</span><span><strong>${currentPlan.stats.auxiliar}</strong> auxiliares</span><span><strong>${currentPlan.connections.length}</strong> conexiones</span>`;
+    elements.stats.innerHTML = statTile(currentPlan.stats.gcp, 'GCP')
+      + statTile(currentPlan.stats.checkpoint, 'de chequeo')
+      + statTile(currentPlan.stats.auxiliar, 'auxiliares')
+      + statTile(currentPlan.connections.length, 'observaciones');
+  }
+
+  function renderContextCount() {
+    if (!elements.contextCount) return;
+    const parts = [];
+    const controls = currentProject.controls?.length ?? 0;
+    const exclusions = currentProject.exclusions?.length ?? 0;
+    const accesses = currentProject.accesses?.length ?? 0;
+    if (controls) parts.push(plural(controls, 'control', 'controles'));
+    if (exclusions) parts.push(plural(exclusions, 'exclusión', 'exclusiones'));
+    if (accesses) parts.push(plural(accesses, 'acceso', 'accesos'));
+    elements.contextCount.textContent = parts.length ? parts.join(' · ') : 'ninguno';
   }
 
   function renderWarnings() {
@@ -165,7 +223,12 @@ export function createPlanningController({
     currentPlan.warnings.forEach(warning => {
       const item = document.createElement('li');
       item.className = `planning-alert planning-alert-${warning.severity}`;
-      item.textContent = warning.message;
+      const tag = document.createElement('span');
+      tag.className = 'planning-alert-tag';
+      tag.textContent = SEVERITY_TAGS[warning.severity] ?? 'Nota';
+      const text = document.createElement('span');
+      text.textContent = warning.message;
+      item.append(tag, text);
       elements.warnings.append(item);
     });
   }
@@ -181,49 +244,107 @@ export function createPlanningController({
     render();
   }
 
+  function pointRow(point) {
+    const item = document.createElement('li');
+    item.className = `planning-point planning-point-${point.role}`;
+    if (point.id === selectedPointId) item.classList.add('is-selected');
+    item.dataset.pointId = point.id;
+
+    // La fila completa centra el punto: es el gesto que más se repite al revisar la propuesta.
+    const locate = document.createElement('button');
+    locate.type = 'button';
+    locate.className = 'planning-point-main';
+    locate.title = `Centrar ${point.id} en la imagen satelital`;
+    const title = document.createElement('strong');
+    title.textContent = point.id;
+    const coordinates = document.createElement('span');
+    coordinates.className = 'planning-point-coords';
+    coordinates.textContent = `E ${point.x.toFixed(1)} · N ${point.y.toFixed(1)} · cota ${Number(point.z ?? 0).toFixed(1)} m`;
+    const state = document.createElement('span');
+    state.className = `planning-point-state planning-access-${point.access === 'Revisar acceso' ? 'revisar' : point.access === 'Próximo a acceso' ? 'ok' : 'pendiente'}`;
+    state.textContent = ACCESS_LABELS[point.access] ?? point.access;
+    locate.append(title, coordinates, state);
+    locate.addEventListener('click', () => selectPoint(point.id));
+
+    const actions = document.createElement('div');
+    actions.className = 'planning-point-actions';
+    if (point.role !== 'control') {
+      actions.append(button(point.fixed ? 'Fijado' : 'Fijar', point.fixed ? 'is-active' : '', () => {
+        currentPlan.points = currentPlan.points.map(candidate => candidate.id === point.id
+          ? { ...candidate, fixed: !candidate.fixed }
+          : candidate);
+        refreshEvaluation();
+      }, {
+        title: point.fixed
+          ? `${point.id} se conservará al generar de nuevo. Pulsa para liberarlo.`
+          : `Conservar ${point.id} donde está al generar de nuevo`,
+        ariaLabel: `Fijar ${point.id}`,
+        pressed: Boolean(point.fixed)
+      }));
+    }
+    actions.append(button('Quitar', 'is-danger', () => {
+      currentPlan = removePlanPoint(currentPlan, point.id, context);
+      if (point.role === 'control') currentProject.controls = currentProject.controls.filter(control => control.id !== point.id);
+      if (selectedPointId === point.id) selectedPointId = null;
+      updateFixedPoints();
+      render();
+    }, { title: `Eliminar ${point.id} del plan`, ariaLabel: `Quitar ${point.id}` }));
+
+    item.append(locate, actions);
+    return item;
+  }
+
   function renderPoints() {
     elements.points.replaceChildren();
-    if (!currentPlan) return;
-    currentPlan.points.forEach(point => {
-      const item = document.createElement('li');
-      item.className = `planning-point planning-point-${point.role}`;
-      const text = document.createElement('div');
-      const title = document.createElement('strong');
-      title.textContent = `${point.id} · ${point.roleLabel}`;
-      const coordinates = document.createElement('span');
-      coordinates.textContent = `E ${point.x.toFixed(1)} · N ${point.y.toFixed(1)} · ${Number(point.z ?? 0).toFixed(1)} m · ${point.access}`;
-      text.append(title, coordinates);
-      const actions = document.createElement('div');
-      actions.className = 'planning-point-actions';
-      if (point.role !== 'control') {
-        actions.append(button(point.fixed ? 'Fijo' : 'Fijar', point.fixed ? 'is-active' : '', () => {
-          currentPlan.points = currentPlan.points.map(candidate => candidate.id === point.id
-            ? { ...candidate, fixed: !candidate.fixed }
-            : candidate);
-          refreshEvaluation();
-        }));
-      }
-      actions.append(button('×', 'is-danger', () => {
-        currentPlan = removePlanPoint(currentPlan, point.id, context);
-        if (point.role === 'control') currentProject.controls = currentProject.controls.filter(control => control.id !== point.id);
-        updateFixedPoints();
-        render();
-      }));
-      item.append(text, actions);
-      elements.points.append(item);
+    if (elements.pointsCount) elements.pointsCount.textContent = currentPlan ? String(currentPlan.points.length) : '';
+    if (!currentPlan) {
+      const empty = document.createElement('p');
+      empty.className = 'planning-hint';
+      empty.textContent = 'Todavía no hay puntos. Genera la propuesta en el paso 2.';
+      elements.points.append(empty);
+      return;
+    }
+    ROLE_GROUPS.forEach(group => {
+      const points = currentPlan.points.filter(point => point.role === group.role);
+      if (!points.length) return;
+      const section = document.createElement('section');
+      section.className = `planning-group planning-group-${group.role}`;
+      const heading = document.createElement('h4');
+      const dot = document.createElement('span');
+      dot.className = 'planning-group-dot';
+      const count = document.createElement('span');
+      count.className = 'planning-chip-count';
+      count.textContent = String(points.length);
+      heading.append(dot, document.createTextNode(group.title), count);
+      const hint = document.createElement('p');
+      hint.className = 'planning-hint';
+      hint.textContent = group.hint;
+      const list = document.createElement('ul');
+      list.className = 'planning-point-list';
+      points.forEach(point => list.append(pointRow(point)));
+      section.append(heading, hint, list);
+      elements.points.append(section);
     });
   }
 
   function renderConnections() {
     elements.connections.replaceChildren();
+    if (elements.connectionsCount) elements.connectionsCount.textContent = currentPlan ? String(currentPlan.connections.length) : '';
     if (!currentPlan) return;
     currentPlan.connections.forEach(connection => {
       const item = document.createElement('li');
       item.className = connection.visible === false ? 'planning-connection is-blocked' : 'planning-connection';
-      const label = document.createElement('span');
-      label.textContent = `${connection.from} – ${connection.to} · ${Math.round(connection.distance)} m`;
+      const label = document.createElement('div');
+      const pair = document.createElement('strong');
+      pair.textContent = `${connection.from} → ${connection.to}`;
+      const detail = document.createElement('span');
+      detail.textContent = connection.visible === false
+        ? `${Math.round(connection.distance)} m · el terreno tapa la visual`
+        : `${Math.round(connection.distance)} m · visual libre`;
+      label.append(pair, detail);
       const select = document.createElement('select');
-      [['gnss', 'GNSS'], ['estacion', 'Estación total'], ['nivelacion', 'Nivelación']].forEach(([value, text]) => {
+      select.setAttribute('aria-label', `Método de la observación ${connection.from} a ${connection.to}`);
+      Object.entries(METHOD_LABELS).forEach(([value, text]) => {
         const option = document.createElement('option');
         option.value = value;
         option.textContent = text;
@@ -239,18 +360,35 @@ export function createPlanningController({
     });
   }
 
+  // Seleccionar sincroniza las dos vistas: resalta la fila y centra el marcador en la imagen.
+  function selectPoint(id, { fromMap = false } = {}) {
+    selectedPointId = id;
+    elements.points.querySelectorAll('.planning-point').forEach(row => {
+      row.classList.toggle('is-selected', row.dataset.pointId === id);
+    });
+    if (fromMap) {
+      elements.points.querySelector(`.planning-point[data-point-id="${id}"]`)
+        ?.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+    satelliteMap.focusPlanningPoint?.(id);
+  }
+
   function render() {
     renderStats();
+    renderContextCount();
     renderWarnings();
     renderPoints();
     renderConnections();
     elements.exports.hidden = !currentPlan;
+    if (elements.exportsEmpty) elements.exportsEmpty.hidden = Boolean(currentPlan);
     satelliteMap.renderPlanning(currentPlan, currentProject, {
       onMove: (id, position) => {
         currentPlan = movePlanPoint(currentPlan, id, position, context);
         updateFixedPoints();
         render();
-      }
+      },
+      onSelect: id => selectPoint(id, { fromMap: true })
     });
   }
 
@@ -319,6 +457,7 @@ export function createPlanningController({
       currentPlan = generatePlan(currentProject, context);
       updateFixedPoints();
       render();
+      showMessage(`Propuesta lista: ${plural(currentPlan.points.length, 'punto', 'puntos')} y ${plural(currentPlan.connections.length, 'observación', 'observaciones')}. Revísala abajo.`, 'ok');
     } catch (error) {
       showError(error.message);
     }
@@ -327,7 +466,7 @@ export function createPlanningController({
   function saveLocal() {
     syncProjectFromForm();
     localStorage.setItem(STORAGE_KEY, serializePlanningProject(currentProject, currentPlan));
-    showError('Proyecto guardado en este navegador.');
+    showMessage('Proyecto guardado en este navegador.', 'ok');
   }
 
   function restoreLocal() {
@@ -345,14 +484,14 @@ export function createPlanningController({
         : null;
       syncForm();
       render();
-      showError(null);
+      showMessage('Proyecto cargado.', 'ok');
     } catch (error) {
       showError(error.message);
     }
   }
 
   function requirePlan(action) {
-    if (!currentPlan) return showError('Genera primero una propuesta.');
+    if (!currentPlan) return showError('Primero genera la propuesta en el paso 2.');
     showError(null);
     action();
   }

@@ -7,16 +7,20 @@ dron.
 
 ## Flujo
 
-El botón **Plan de campo** abre un panel con el flujo `cargar → proponer → corregir → exportar`:
+El botón **Plan de campo** abre un panel dividido en cuatro pasos numerados —definir el trabajo,
+generar la propuesta, revisar y ajustar, y llevar el plan a campo— que siguen el flujo
+`cargar → proponer → corregir → exportar`:
 
 1. El polígono de estudio es la geometría inicial. Puede sustituirse por un área o un eje de
    corredor dibujado por el usuario.
 2. Se seleccionan método principal, alternativa y cantidades de GCP y checkpoints.
 3. Pueden dibujarse exclusiones, accesos y controles existentes; estos últimos también se importan
-   desde CSV con coordenadas Este/Norte y elevación opcional.
+   desde CSV con coordenadas Este/Norte y elevación opcional. Estos datos opcionales viven en un
+   `<details>` del paso 1 cuyo resumen indica cuántos hay cargados.
 4. **Generar propuesta** distribuye los puntos y crea las conexiones.
 5. Los puntos propuestos son arrastrables. También pueden fijarse, eliminarse o añadirse como GCP,
-   checkpoint o auxiliar.
+   checkpoint o auxiliar. La lista se agrupa por rol; cada fila centra su punto en la imagen
+   satelital al pulsarla y se resalta cuando se hace clic en el marcador correspondiente del mapa.
 6. El proyecto se guarda en `localStorage` o se descarga como `.gestiagro.json`.
 
 La URL `?herramienta=planificacion&propuesta=si` abre la herramienta y genera la propuesta inicial;
@@ -73,7 +77,9 @@ necesariamente edificios, vegetación u obstáculos temporales.
 
 ## Persistencia y entregables
 
-[`domain/planning-export.js`](../../dist/js/domain/planning-export.js) genera:
+El paso 4 separa los entregables en *Para la comisión de campo* (informe imprimible, KMZ, KML) y
+*Para la oficina* (puntos CSV, PENZD, observaciones CSV); las descargas permanecen ocultas hasta que
+existe una propuesta. [`domain/planning-export.js`](../../dist/js/domain/planning-export.js) genera:
 
 - puntos CSV con estado `PROPUESTO` o `CONTROL EXISTENTE`;
 - puntos PENZD;
@@ -92,3 +98,18 @@ acceso, seguridad, estabilidad, obstáculos y precisión se confirman en campo.
 alternado, cresta que bloquea una visual, movimiento y eliminación de puntos, coherencia de las
 exportaciones KML/KMZ/CSV/PENZD/informe y reapertura del proyecto portable.
 
+## Lenguaje del panel
+
+El dominio conserva sus etiquetas cortas y la interfaz las traduce en
+[`ui/planning-controller.js`](../../dist/js/ui/planning-controller.js):
+
+| Valor del dominio | Texto en pantalla |
+| --- | --- |
+| `No evaluado` | Acceso por verificar |
+| `Próximo a acceso` | Cerca de un acceso |
+| `Revisar acceso` | Lejos del acceso dibujado |
+
+Las advertencias anteponen una etiqueta según su severidad —*Corregir*, *Revisar* o *Nota*— y las
+observaciones indican si la visual está libre u obstruida por el terreno. Los mensajes de éxito
+(propuesta generada, proyecto guardado o cargado) usan `.planning-message.is-ok` en verde, en lugar
+del rojo reservado a los errores.

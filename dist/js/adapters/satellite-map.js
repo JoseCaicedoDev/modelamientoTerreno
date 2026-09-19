@@ -18,6 +18,7 @@ export function createSatelliteMap({
   let cursorMarker;
   let drawing = null;
   const groups = new Map();
+  const planningMarkers = new Map();
   const userLayers = new Map();
   let nextUserLayerId = 1;
 
@@ -257,6 +258,7 @@ export function createSatelliteMap({
     if (!map) return;
     const group = layerGroup('planificacion');
     group.clearLayers();
+    planningMarkers.clear();
     const geometry = projectData.geometry ?? [];
     if (geometry.length >= 2) {
       const latlngs = geometry.map(toLatLng);
@@ -300,6 +302,7 @@ export function createSatelliteMap({
         title: `${point.id} · ${point.roleLabel}`
       }).addTo(group);
       marker.bindTooltip(`${point.id} · ${point.roleLabel}<br>${point.reason}`, { direction: 'top' });
+      planningMarkers.set(point.id, marker);
       marker.on('click', () => onSelect?.(point.id));
       if (point.role !== 'control') {
         marker.on('dragend', event => {
@@ -308,6 +311,14 @@ export function createSatelliteMap({
         });
       }
     });
+  }
+
+  // Centrar un punto del plan desde la lista del panel, sin cambiar el nivel de zoom elegido.
+  function focusPlanningPoint(id) {
+    const marker = planningMarkers.get(id);
+    if (!map || !marker) return;
+    map.panTo(marker.getLatLng());
+    marker.openTooltip();
   }
 
   function setUserLayerVisible(id, visible) {
@@ -437,6 +448,7 @@ export function createSatelliteMap({
     createRaster,
     addUserLayer,
     renderPlanning,
+    focusPlanningPoint,
     setUserLayerVisible,
     removeUserLayer,
     zoomToUserLayer,

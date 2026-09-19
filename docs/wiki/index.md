@@ -3,7 +3,7 @@
 Base de conocimiento de lo que está implementado en este repositorio. Cada página describe una
 pieza real del código; si el código cambia, la página correspondiente se actualiza.
 
-Actualizada el 2026-09-18 · planificación de fotocontrol y red de apoyo · Sistema v2.4.0
+Actualizada el 2026-09-18 · panel de plan de campo guiado por pasos · Sistema v2.4.1
 
 ## Páginas
 

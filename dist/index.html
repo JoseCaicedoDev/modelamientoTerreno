@@ -116,72 +116,130 @@
               </div>
             </header>
             <div class="planning-body">
-              <div class="planning-form-grid">
-                <label class="planning-field planning-field-wide">Proyecto
-                  <input id="planning-name" type="text" value="Plan de fotocontrol y red de apoyo">
-                </label>
-                <label class="planning-field">Geometría
-                  <select id="planning-type"><option value="area">Área</option><option value="corredor">Corredor</option></select>
-                </label>
-                <label class="planning-field">Método
-                  <select id="planning-method"><option value="combinado">Combinado</option><option value="gnss">GNSS</option><option value="estacion">Estación total</option></select>
-                </label>
-                <label class="planning-field">Alternativa
-                  <select id="planning-alternative"><option value="cobertura">Mejor cobertura</option><option value="economico">Menos puntos</option></select>
-                </label>
-                <label class="planning-field">GCP
-                  <input id="planning-gcp" type="number" min="3" max="20" value="5">
-                </label>
-                <label class="planning-field">Checkpoints
-                  <input id="planning-checkpoints" type="number" min="1" max="10" value="2">
-                </label>
-              </div>
+              <ol class="planning-steps">
+                <li class="planning-step">
+                  <div class="planning-step-head">
+                    <span class="planning-step-number">1</span>
+                    <div>
+                      <h3>Define el trabajo</h3>
+                      <p>Nombra el proyecto y elige cuántos puntos necesitas. El área de estudio ya viene cargada.</p>
+                    </div>
+                  </div>
+                  <div class="planning-form-grid">
+                    <label class="planning-field planning-field-wide">Nombre del proyecto
+                      <input id="planning-name" type="text" value="Plan de fotocontrol y red de apoyo">
+                    </label>
+                    <label class="planning-field">Forma del área
+                      <select id="planning-type" title="Un área es un polígono; un corredor sigue un eje, como una vía o una línea eléctrica.">
+                        <option value="area">Área (polígono)</option>
+                        <option value="corredor">Corredor (eje)</option>
+                      </select>
+                    </label>
+                    <label class="planning-field">Cómo se medirá
+                      <select id="planning-method" title="Define qué observaciones propone la red de apoyo.">
+                        <option value="combinado">Combinado (GNSS y estación)</option>
+                        <option value="gnss">Solo GNSS</option>
+                        <option value="estacion">Solo estación total</option>
+                      </select>
+                    </label>
+                    <label class="planning-field">Criterio de reparto
+                      <select id="planning-alternative" title="Cobertura reparte al máximo; menos recorrido concentra los puntos.">
+                        <option value="cobertura">Mejor cobertura</option>
+                        <option value="economico">Menos recorrido</option>
+                      </select>
+                    </label>
+                    <label class="planning-field">Puntos de control (GCP)
+                      <input id="planning-gcp" type="number" min="3" max="20" value="5">
+                    </label>
+                    <label class="planning-field">Puntos de chequeo
+                      <input id="planning-checkpoints" type="number" min="1" max="10" value="2">
+                    </label>
+                  </div>
+                  <details class="planning-optional">
+                    <summary>Datos del terreno que ya conoces <span id="planning-context-count" class="planning-chip-count"></span></summary>
+                    <p class="planning-hint">Dibújalos sobre la imagen satelital si los tienes: mejoran la propuesta y las advertencias.</p>
+                    <div class="planning-actions planning-actions-setup">
+                      <button id="planning-draw-geometry" type="button" title="Sustituye el área de estudio por una que dibujes">Redibujar área</button>
+                      <button id="planning-draw-exclusion" type="button" title="Zonas donde no se puede materializar un punto">Zona excluida</button>
+                      <button id="planning-draw-access" type="button" title="Vías o trochas por donde se llega a los puntos">Vía de acceso</button>
+                      <button id="planning-add-control" type="button" title="Punto con coordenadas ya conocidas">Control conocido</button>
+                      <button id="planning-controls-file" type="button" title="CSV con columnas de Este, Norte y elevación opcional">Importar CSV</button>
+                      <input id="planning-controls-input" type="file" accept=".csv,.txt" hidden>
+                    </div>
+                  </details>
+                </li>
 
-              <div class="planning-actions planning-actions-setup">
-                <button id="planning-draw-geometry" type="button">Dibujar área</button>
-                <button id="planning-draw-exclusion" type="button">+ Exclusión</button>
-                <button id="planning-draw-access" type="button">+ Acceso</button>
-                <button id="planning-add-control" type="button">+ Control</button>
-                <button id="planning-controls-file" type="button">CSV control</button>
-                <input id="planning-controls-input" type="file" accept=".csv,.txt" hidden>
-              </div>
+                <li class="planning-step">
+                  <div class="planning-step-head">
+                    <span class="planning-step-number">2</span>
+                    <div>
+                      <h3>Genera la propuesta</h3>
+                      <p>El planificador reparte los puntos sobre el terreno y arma la red de apoyo.</p>
+                    </div>
+                  </div>
+                  <button id="planning-generate" class="planning-primary" type="button">Generar propuesta</button>
+                  <p id="planning-error" class="planning-message" hidden></p>
+                  <div id="planning-stats" class="planning-stats" aria-label="Resumen del plan"></div>
+                  <ul id="planning-warnings" class="planning-alerts"></ul>
+                </li>
 
-              <button id="planning-generate" class="planning-primary" type="button">Generar propuesta</button>
-              <p id="planning-error" class="planning-message" hidden></p>
-              <div id="planning-stats" class="planning-stats" aria-label="Resumen del plan"></div>
-              <ul id="planning-warnings" class="planning-alerts"></ul>
+                <li class="planning-step">
+                  <div class="planning-step-head">
+                    <span class="planning-step-number">3</span>
+                    <div>
+                      <h3>Revisa y ajusta</h3>
+                      <p>Arrastra un punto sobre el mapa para moverlo. <strong>Ver</strong> lo centra en la imagen y <strong>Fijar</strong> lo conserva si vuelves a generar.</p>
+                    </div>
+                  </div>
+                  <div class="planning-actions planning-edit-actions">
+                    <button id="planning-add-gcp" type="button" title="Añadir un punto de control marcándolo en el mapa">+ GCP</button>
+                    <button id="planning-add-checkpoint" type="button" title="Añadir un punto de chequeo marcándolo en el mapa">+ Chequeo</button>
+                    <button id="planning-add-auxiliary" type="button" title="Añadir un punto auxiliar de la red">+ Auxiliar</button>
+                  </div>
+                  <details class="planning-details" open>
+                    <summary>Puntos del plan <span id="planning-points-count" class="planning-chip-count"></span></summary>
+                    <div id="planning-points" class="planning-points"></div>
+                  </details>
+                  <details class="planning-details">
+                    <summary>Observaciones entre puntos <span id="planning-connections-count" class="planning-chip-count"></span></summary>
+                    <p class="planning-hint">Cada línea del mapa es una medición prevista. Cambia el método si en campo se resuelve de otra forma.</p>
+                    <ul id="planning-connections" class="planning-connections"></ul>
+                  </details>
+                </li>
 
-              <div class="planning-actions planning-edit-actions">
-                <button id="planning-add-gcp" type="button">+ GCP</button>
-                <button id="planning-add-checkpoint" type="button">+ Checkpoint</button>
-                <button id="planning-add-auxiliary" type="button">+ Auxiliar</button>
-              </div>
-
-              <details class="planning-details" open>
-                <summary>Puntos del plan</summary>
-                <ul id="planning-points" class="planning-points"></ul>
-              </details>
-              <details class="planning-details">
-                <summary>Conexiones recomendadas</summary>
-                <ul id="planning-connections" class="planning-connections"></ul>
-              </details>
-
-              <div id="planning-exports" class="planning-export-grid" hidden>
-                <button type="button" data-planning-export="pdf">Informe / PDF</button>
-                <button type="button" data-planning-export="csv">Puntos CSV</button>
-                <button type="button" data-planning-export="penzd">PENZD</button>
-                <button type="button" data-planning-export="observaciones">Conexiones CSV</button>
-                <button type="button" data-planning-export="kml">KML</button>
-                <button type="button" data-planning-export="kmz">KMZ</button>
-              </div>
-
-              <div class="planning-project-actions">
-                <button id="planning-save" type="button">Guardar aquí</button>
-                <button id="planning-restore" type="button">Recuperar</button>
-                <button id="planning-export-project" type="button">Descargar proyecto</button>
-                <button id="planning-project-file" type="button">Abrir proyecto</button>
-                <input id="planning-project-input" type="file" accept=".json,.gestiagro.json" hidden>
-              </div>
+                <li class="planning-step">
+                  <div class="planning-step-head">
+                    <span class="planning-step-number">4</span>
+                    <div>
+                      <h3>Lleva el plan a campo</h3>
+                      <p>Descarga lo que necesites o guarda el proyecto para seguir después.</p>
+                    </div>
+                  </div>
+                  <p id="planning-exports-empty" class="planning-hint">Genera la propuesta y aquí aparecerán las descargas.</p>
+                  <div id="planning-exports" class="planning-exports" hidden>
+                    <p class="planning-group-label">Para la comisión de campo</p>
+                    <div class="planning-export-grid">
+                      <button type="button" data-planning-export="pdf" title="Documento imprimible con esquema, tablas y lista de campo">Informe imprimible</button>
+                      <button type="button" data-planning-export="kmz" title="Para abrirlo en Google Earth o en el móvil">KMZ (Google Earth)</button>
+                      <button type="button" data-planning-export="kml" title="Igual que el KMZ, sin comprimir">KML</button>
+                    </div>
+                    <p class="planning-group-label">Para la oficina</p>
+                    <div class="planning-export-grid">
+                      <button type="button" data-planning-export="csv" title="Código, rol, coordenadas y estado de cada punto">Puntos CSV</button>
+                      <button type="button" data-planning-export="penzd" title="Punto, Este, Norte, Cota y Descripción para la colectora">PENZD</button>
+                      <button type="button" data-planning-export="observaciones" title="Método, distancia y visibilidad de cada observación">Observaciones CSV</button>
+                    </div>
+                  </div>
+                  <p class="planning-group-label">Continuar después</p>
+                  <div class="planning-project-actions">
+                    <button id="planning-save" type="button" title="Queda guardado solo en este navegador">Guardar en el navegador</button>
+                    <button id="planning-restore" type="button" title="Recupera lo último guardado en este navegador">Recuperar</button>
+                    <button id="planning-export-project" type="button" title="Archivo .gestiagro.json para compartir o respaldar">Descargar proyecto</button>
+                    <button id="planning-project-file" type="button" title="Abrir un archivo .gestiagro.json">Abrir proyecto</button>
+                    <input id="planning-project-input" type="file" accept=".json,.gestiagro.json" hidden>
+                  </div>
+                </li>
+              </ol>
               <p class="result-note">Las coordenadas son propuestas. Confirma acceso, seguridad, estabilidad, visibilidad y precisión antes de materializar.</p>
             </div>
           </section>

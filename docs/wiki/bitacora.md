@@ -2,6 +2,29 @@
 
 Qué aportó cada commit, del más reciente al más antiguo.
 
+## 2026-09-18 — Panel de plan de campo más guiado · v2.4.1
+
+El panel del planificador era una sola columna de formularios, botones y filas de 8 px sin decir en
+qué orden se usaban. El cuerpo pasa a cuatro pasos numerados (`.planning-steps` en
+[`dist/index.html`](../../dist/index.html)): definir el trabajo, generar la propuesta, revisar y
+ajustar, y llevar el plan a campo. Cada paso lleva una frase de ayuda y los datos opcionales del
+terreno (exclusiones, accesos, control conocido, CSV) quedan plegados en un `<details>` que resume
+cuántos hay.
+
+La lista de puntos se agrupa por rol con su punto de color, un contador y una línea que explica
+para qué sirve cada rol. Cada fila es un botón que centra el punto en la imagen satelital
+(`focusPlanningPoint` en [`adapters/satellite-map.js`](../../dist/js/adapters/satellite-map.js)), y
+al pulsar un marcador del mapa se resalta la fila correspondiente. `×` pasa a **Quitar** y `Fijo` a
+**Fijado**, ambos con `title` y `aria-label` por punto. El estado de acceso se escribe en lenguaje
+de campo: *Acceso por verificar*, *Cerca de un acceso*, *Lejos del acceso dibujado*.
+
+Las advertencias anteponen una etiqueta *Corregir · Revisar · Nota*, las observaciones dicen si la
+visual está libre u obstruida, los mensajes de éxito ya no se pintan de rojo (`.planning-message.is-ok`)
+y los seis entregables se separan en *Para la comisión de campo* y *Para la oficina*, con las
+descargas ocultas hasta que exista propuesta. Los tamaños de texto de 8–9 px suben a 10–12 px y los
+botones de fila a 30 px de alto. → [Planificación de campo](planificacion-campo.md) ·
+[Interfaz y marca](interfaz-y-marca.md)
+
 ## 2026-09-18 — Planificación de fotocontrol y red de apoyo · v2.4.0
 
 Nuevo flujo local para preparar el reconocimiento de campo. Propone GCP y checkpoints en áreas o

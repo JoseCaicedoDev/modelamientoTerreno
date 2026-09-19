@@ -47,6 +47,12 @@ El planificador usa un panel propio, más ancho y desplazable que los resultados
 escritorio ocupa la parte derecha del mapa; en móvil se limita a la mitad inferior visible. Su
 cabecera también puede minimizarse para inspeccionar los puntos y conexiones sobre la imagen.
 
+Su cuerpo se organiza en una lista `.planning-steps` de cuatro pasos numerados, cada uno con título,
+frase de ayuda y sus controles. Los textos de apoyo miden 10,5–11 px y los datos de cada punto
+12 px, por encima de los 8–9 px anteriores; los botones de fila miden 30 px de alto y en móvil se
+apilan a ancho completo. Los contadores `.planning-chip-count` resumen cuántos elementos hay
+plegados dentro de cada `<details>`.
+
 ## Accesibilidad
 
 Las regiones tienen nombres accesibles, los botones de estado usan `aria-pressed`, el panel de
